@@ -22,15 +22,15 @@ Parameters:
         Type: String
         Default: /health
 
-    HostedZoneName:
-        Description: Name of the Hosted Zone to register service with
-        Type: String
-        Default: apps.gureu.me
-
     DockerImage:
         Description: Docker image to start the container with
         Type: String
         Default: nginx:latest
+
+    HostedZoneName:
+        Description: Name of the Hosted Zone to register service with
+        Type: String
+        Default: apps.gureu.me
 
 Resources:
 
@@ -48,12 +48,12 @@ Resources:
             TaskDefinition: !Ref TaskDefinition
             LaunchType: FARGATE
             LoadBalancers:
-                - ContainerName: web
-                  ContainerPort: 80
-                  TargetGroupArn: !Ref TargetGroup
+              - ContainerName: web
+                ContainerPort: 80
+                TargetGroupArn: !Ref TargetGroup
             NetworkConfiguration:
               AwsvpcConfiguration:
-                AssignPublicIp: ENABLED
+                AssignPublicIp: DISABLED
                 SecurityGroups:
                   - Fn::GetAtt:
                       - ApplicationServiceSecurityGroup
@@ -86,14 +86,14 @@ Resources:
                   LogConfiguration:
                     LogDriver: awslogs
                     Options:
-                        awslogs-group: !Sub '/platform/app/${AWS::StackName}'
+                        awslogs-group: !Sub 'platform-app-${AWS::StackName}'
                         awslogs-region: !Ref AWS::Region
-                        awslogs-stream-prefix: !Ref Group
+                        awslogs-stream-prefix: !Ref AWS::StackName
 
     CloudWatchLogsGroup:
         Type: AWS::Logs::LogGroup
         Properties:
-            LogGroupName: !Ref AWS::StackName
+            LogGroupName: !Sub 'platform-app-${AWS::StackName}'
             RetentionInDays: 365
 
     ApplicationServiceSecurityGroup:
@@ -137,7 +137,8 @@ Resources:
           Priority: !Ref Priority
           Conditions:
               - Field: host-header
-                Values: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+                Values:
+                  - !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
           Actions:
               - TargetGroupArn: !Ref TargetGroup
                 Type: forward
@@ -145,7 +146,7 @@ Resources:
     ServiceDNSRecord:
       Type: AWS::Route53::RecordSet
       Properties:
-        HostedZoneName: !Ref 'HostedZoneName'
+        HostedZoneName: !Join ['', [!Ref 'HostedZoneName', .]]
         Comment: !Sub 'DNS Record for ${AWS::StackName}'
         Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
         Type: A
