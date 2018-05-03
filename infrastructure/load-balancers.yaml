@@ -67,8 +67,20 @@ Outputs:
         Export:
           Name: LoadBalancerUrl
 
-    Listener:
-        Description: A reference to a port 80 listener
+    LoadBalancerListener:
+        Description: A reference to a port listener
         Value: !Ref LoadBalancerListener
         Export:
           Name: Listener
+    
+    LoadBalancerCanonicalHostedZoneID:
+        Description: A reference to a port listener
+        Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+        Export:
+          Name: LoadBalancerCanonicalHostedZoneID
+    
+    LoadBalancerDNSName:
+        Description: A reference to a port listener
+        Value: !GetAtt LoadBalancer.DNSName
+        Export:
+          Name: LoadBalancerDNSName

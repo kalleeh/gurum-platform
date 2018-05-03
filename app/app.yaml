@@ -22,11 +22,16 @@ Parameters:
         Type: String
         Default: /health
 
+    HostedZoneName:
+        Description: Name of the Hosted Zone to register service with
+        Type: String
+        Default: gureu.me
 
     DockerImage:
-        Description: The health check path to register with the Application Load Balancer
+        Description: Docker image to start the container with
         Type: String
-        Default: /health
+        Default: nginx:latest
+
 Resources:
 
     Service:
@@ -81,9 +86,9 @@ Resources:
                   LogConfiguration:
                     LogDriver: awslogs
                     Options:
-                        awslogs-group: !Ref AWS::StackName
+                        awslogs-group: !Sub '/platform/app/${AWS::StackName}'
                         awslogs-region: !Ref AWS::Region
-                        awslogs-stream-prefix: web
+                        awslogs-stream-prefix: !Ref Group
 
     CloudWatchLogsGroup:
         Type: AWS::Logs::LogGroup
@@ -106,37 +111,47 @@ Resources:
         VpcId: !ImportValue VPC
 
     TargetGroup:
-        Type: AWS::ElasticLoadBalancingV2::TargetGroup
-        Properties:
-          Name:
-            Ref: AWS::StackName
-          TargetType: ip
-          Port: 80
-          Protocol: HTTP
-          VpcId: !ImportValue VPC
-          TargetGroupAttributes:
-            - Key: deregistration_delay.timeout_seconds
-              Value: 50
-          Matcher:
-              HttpCode: 200-299
-          HealthCheckIntervalSeconds: 10
-          HealthCheckPath: !Ref HealthCheckPath
-          HealthCheckProtocol: HTTP
-          HealthCheckTimeoutSeconds: 5
-          HealthyThresholdCount: 2
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        Name:
+          Ref: AWS::StackName
+        TargetType: ip
+        Port: 80
+        Protocol: HTTP
+        VpcId: !ImportValue VPC
+        TargetGroupAttributes:
+          - Key: deregistration_delay.timeout_seconds
+            Value: 50
+        Matcher:
+            HttpCode: 200-299
+        HealthCheckIntervalSeconds: 10
+        HealthCheckPath: !Ref HealthCheckPath
+        HealthCheckProtocol: HTTP
+        HealthCheckTimeoutSeconds: 5
+        HealthyThresholdCount: 2
 
     ListenerRule:
-        Type: AWS::ElasticLoadBalancingV2::ListenerRule
-        Properties:
-            ListenerArn: !Ref Listener
-            Priority: !Ref Priority
-            Conditions:
-                - Field: path-pattern
-                  Values:
-                    - !Sub '/${AWS::StackName}*'
-            Actions:
-                - TargetGroupArn: !Ref TargetGroup
-                  Type: forward
+      Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Properties:
+          ListenerArn: !Ref Listener
+          Priority: !Ref Priority
+          Conditions:
+              - Field: host-header
+                Values: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+          Actions:
+              - TargetGroupArn: !Ref TargetGroup
+                Type: forward
+
+    ServiceDNSRecord:
+      Type: AWS::Route53::RecordSet
+      Properties:
+        HostedZoneName: !Ref 'HostedZoneName'
+        Comment: !Sub 'DNS Record for ${AWS::StackName}'
+        Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+        Type: A
+        AliasTarget:
+          HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
+          DNSName: !ImportValue LoadBalancerDNSName
 
     ApplicationContainerRole:
       Type: "AWS::IAM::Role"
@@ -155,6 +170,4 @@ Resources:
 
 Outputs:
   Endpoint:
-    Value: !Sub
-      - ${Url}/${AWS::StackName}
-      - { Url: !ImportValue LoadBalancerUrl }
+    Value: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]

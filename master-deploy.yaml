@@ -31,7 +31,7 @@ Resources:
           Fn::GetAtt:
           - VPC
           - Outputs.VPC
-      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/9d5d41a211ef5d419c991f303cacd771.template
+      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/7991777ae968463a8bfdd911f2d29de2.template
     Type: AWS::CloudFormation::Stack
   AppDeploymentRole:
     Properties:
