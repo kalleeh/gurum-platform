@@ -25,7 +25,7 @@ Parameters:
     HostedZoneName:
         Description: Name of the Hosted Zone to register service with
         Type: String
-        Default: gureu.me
+        Default: apps.gureu.me
 
     DockerImage:
         Description: Docker image to start the container with
