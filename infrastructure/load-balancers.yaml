@@ -71,7 +71,7 @@ Outputs:
         Description: A reference to a port listener
         Value: !Ref LoadBalancerListener
         Export:
-          Name: Listener
+          Name: LoadBalancerListener
     
     LoadBalancerCanonicalHostedZoneID:
         Description: A reference to a port listener
