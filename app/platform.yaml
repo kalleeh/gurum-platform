@@ -1,0 +1,346 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Gureume Platform Template v1.0
+
+Resources:
+  # Network
+  GureumeNetwork:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "192.168.0.0/16"
+      Tags:
+        - Key: Name
+          Value:
+            Ref: AWS::StackName
+  GureumeNetworkSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: GureumeNetwork
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: "192.168.0.0/20"
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: "${AWS::StackName} Subnet A"
+  GureumeNetworkSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: GureumeNetwork
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: "192.168.16.0/20"
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: "${AWS::StackName} Subnet B"
+  GureumeNetworkRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId:
+        Ref: GureumeNetwork
+      Tags:
+        - Key: Name
+          Value:
+            Ref: AWS::StackName
+  GureumeNetworkOutboundRoute:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId:
+        Ref: GureumeNetworkRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId:
+        Ref: GureumeNetworkGateway
+  GureumeNetworkGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value:
+            Ref: AWS::StackName
+  GureumeNetworkGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId:
+        Ref: GureumeNetwork
+      InternetGatewayId:
+        Ref: GureumeNetworkGateway
+  GureumeNetworkSubnetARoute:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: GureumeNetworkSubnetA
+      RouteTableId:
+        Ref: GureumeNetworkRouteTable
+  GureumeNetworkSubnetBRoute:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: GureumeNetworkSubnetB
+      RouteTableId:
+        Ref: GureumeNetworkRouteTable
+
+  # Pipeline
+  GureumePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      ArtifactStore:
+        Type: S3
+        Location:
+          Ref: GureumePipelineArtifactStore
+      RestartExecutionOnUpdate: false
+      RoleArn:
+        Fn::GetAtt:
+          - GureumePipelineRole
+          - Arn
+      Stages:
+        - Name: Repository
+          Actions:
+            - Name: ChangeSource
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                RepositoryName:
+                  Fn::GetAtt:
+                    - GureumeRepository
+                    - Name
+                BranchName: master
+              OutputArtifacts:
+                - Name: GureumeSource
+        - Name: Builder
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName:
+                  Ref: GureumeBuilder
+              InputArtifacts:
+                - Name: GureumeSource
+              OutputArtifacts:
+                - Name: GureumeBuild
+        - Name: Deployer
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                StackName:
+                  Ref: AWS::StackName
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: GureumeBuild::platform.yaml
+                RoleArn:
+                  Fn::GetAtt:
+                    - GureumeDeployerRole
+                    - Arn
+              InputArtifacts:
+                - Name: GureumeBuild
+  GureumePipelineArtifactStore:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName:
+        Fn::Sub: "gureume-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+  GureumePipelineRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName:
+        Fn::Sub: "GureumePipelineRole-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Sub: "GureumePipelinePolicy-${AWS::StackName}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - ec2:*
+                  - elasticloadbalancing:*
+                  - autoscaling:*
+                  - cloudwatch:*
+                  - s3:*
+                  - sns:*
+                  - cloudformation:*
+                  - rds:*
+                  - sqs:*
+                  - ecs:*
+                  - iam:PassRole
+  GureumeRepository:
+    Type: "AWS::CodeCommit::Repository"
+    Properties:
+      RepositoryName:
+        Ref: AWS::StackName
+  GureumeRegistry:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName:
+        Ref: AWS::StackName
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 10,
+                "description": "keep the count of images to 30",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  # Builder
+  GureumeBuilder:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
+        Image: aws/codebuild/docker:17.09.0
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value:
+              Ref: AWS::Region
+          - Name: AWS_REGION
+            Value:
+              Ref: AWS::Region
+          - Name: REPOSITORY_URI
+            Value:
+              Fn::Sub: "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${GureumeRegistry}"
+          - Name: APP_NAME
+            Value:
+              Ref: AWS::StackName
+      ServiceRole:
+        Fn::GetAtt:
+          - GureumeBuilderRole
+          - Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - $(aws ecr get-login --no-include-email)
+                - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+                - IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+                - docker pull "$REPOSITORY_URI" || true
+                - wget https://s3.amazonaws.com/wata727-releases/herogate
+                - install herogate /usr/local/bin
+            build:
+              commands:
+                - docker build --tag "$IMAGE_URI" --cache-from "$REPOSITORY_URI" .
+            post_build:
+              commands:
+                - docker tag "$IMAGE_URI" "$REPOSITORY_URI"
+                - docker push "$IMAGE_URI"
+                - docker push "$REPOSITORY_URI"
+                - herogate internal generate-template $APP_NAME $IMAGE_URI > platform.yaml
+          artifacts:
+            files: platform.yaml
+      Artifacts:
+        Type: CODEPIPELINE
+  GureumeBuilderRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName:
+        Fn::Sub: "GureumeBuilderRole-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Sub: "GureumePipelinePolicy-${AWS::StackName}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action: ecr:GetAuthorizationToken
+              - Effect: Allow
+                Resource:
+                  - Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}"
+                  - Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${AWS::StackName}:*"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Effect: Allow
+                Resource:
+                  Fn::Sub: "arn:aws:s3:::${GureumePipelineArtifactStore}*"
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+              - Effect: Allow
+                Resource:
+                  Fn::Sub: arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${GureumeRegistry}
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+              - Effect: Allow
+                Resource:
+                  Fn::Sub: arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}*
+                Action: cloudformation:GetTemplate
+
+Outputs:
+  Repository:
+    Value:
+      Fn::GetAtt:
+        - GureumeRepository
+        - CloneUrlSsh
+  Endpoint:
+    Value:
+      Fn::GetAtt:
+        - GureumeLoadBalancer
+        - DNSName

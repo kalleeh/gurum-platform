@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+    This template deploys a namespace for using ECS Service Discovery together with the Route 53 Auto Naming API
+
+Parameters:
+
+    NamespaceName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+
+    VPC:
+        Description: VPC to attach the private namespace to
+        Type: AWS::EC2::VPC::Id
+
+Resources:
+
+  Namespace:
+    Type: "AWS::ServiceDiscovery::PrivateDnsNamespace"
+    Properties:
+      Description: Service Discovery Namespace for Platform
+      Vpc: !Ref VPC
+      Name: !Ref NamespaceName
+
+Outputs:
+
+    NamespaceId:
+        Description: Service Discovery Namespace ID
+        Value: !GetAtt Namespace.Id
+        Export:
+          Name: NamespaceId

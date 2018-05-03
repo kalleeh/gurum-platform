@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Platform Service with Dedicated Load Balancer
+
+Resources:
+  # Deployer
+  GureumeApplicationService:
+    Type: "AWS::ECS::Service"
+    DependsOn: GureumeLoadBalancerListener
+    Properties:
+      ServiceName:
+        Ref: AWS::StackName
+      Cluster: !ImportValue Cluster
+      TaskDefinition:
+        Ref: GureumeApplicationContainer
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: 1
+      LoadBalancers:
+        - TargetGroupArn:
+            Ref: GureumeLoadBalancerTargetGroup
+          ContainerName: web
+          ContainerPort: 80
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::GetAtt:
+                - GureumeApplicationServiceSecurityGroup
+                - GroupId
+          Subnets:
+            - !ImportValue PrivateSubnet1
+            - !ImportValue PrivateSubnet2
+  GureumeApplicationContainer:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      Family:
+        Ref: AWS::StackName
+      Cpu: "1024"
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::GetAtt:
+          - GureumeApplicationContainerRole
+          - Arn
+      ContainerDefinitions:
+        - Name: web
+          Image: "httpd:2.4"
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region:
+                Ref: AWS::Region
+              awslogs-group:
+                Ref: GureumeApplicationContainerLogs
+              awslogs-stream-prefix: web
+  GureumeApplicationContainerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName:
+        Fn::Sub: "GureumeApplicationContainerRole-${AWS::StackName}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      AssumeRolePolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+  GureumeApplicationContainerLogs:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName:
+        Fn::Sub: "GureumeApplicationContainerLogs-${AWS::StackName}"
+      RetentionInDays: 14
+  GureumeApplicationServiceSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName:
+        Fn::Sub: "GureumeApplicationServiceSecurityGroup-${AWS::StackName}"
+      GroupDescription:
+        Fn::Sub: "Gureume Application Service Security Group (${AWS::StackName})"
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          FromPort: "0"
+          ToPort: "65535"
+          IpProtocol: tcp
+      VpcId: !ImportValue VPC
+  GureumeLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      SecurityGroups:
+        - Fn::GetAtt:
+            - GureumeLoadBalancerSecurityGroup
+            - GroupId
+      Subnets:
+        - !ImportValue PrivateSubnet1
+        - !ImportValue PrivateSubnet2
+  GureumeLoadBalancerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName:
+        Fn::Sub: "GureumeLoadBalancerSecurityGroup-${AWS::StackName}"
+      GroupDescription:
+        Fn::Sub: "Gureume LoadBalancer Security Group (${AWS::StackName})"
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          FromPort: "80"
+          ToPort: "80"
+          IpProtocol: tcp
+        - CidrIp: "0.0.0.0/0"
+          FromPort: "443"
+          ToPort: "443"
+          IpProtocol: tcp
+      VpcId: !ImportValue VPC
+  GureumeLoadBalancerTargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    DependsOn: GureumeLoadBalancer
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      TargetType: ip
+      Port: 80
+      Protocol: HTTP
+      VpcId: !ImportValue VPC
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 50
+  GureumeLoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn:
+        Ref: GureumeLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: GureumeLoadBalancerTargetGroup
+          Type: forward
+  GureumeDeployerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName:
+        Fn::Sub: "GureumeDeployerRole-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Sub: "GureumeDeployerPolicy-${AWS::StackName}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - ec2:*
+                  - codepipeline:*
+                  - s3:*
+                  - iam:*
+                  - codecommit:*
+                  - ecr:*
+                  - codebuild:*
+                  - ecs:*
+                  - elasticloadbalancing:*
+                  - autoscaling:*
+                  - cloudwatch:*
+
+Outputs:
+  Endpoint:
+    Value:
+      Fn::GetAtt:
+        - GureumeLoadBalancer
+        - DNSName
