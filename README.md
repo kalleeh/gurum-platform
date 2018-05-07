@@ -1,6 +1,6 @@
 # Gureume Platform Template
 
-This reference architecture provides a set of YAML templates for deploying microservices to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
+This reference architecture provides a set of YAML templates for deploying a container cluster and supporting functionality to the Gureume Management API with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 ## Overview
 
@@ -35,9 +35,7 @@ After the CloudFormation templates have been deployed, the [stack outputs](http:
 
 The ECS instances should also appear in the Managed Instances section of the EC2 console.
 
-## How do I...?
-
-### Get started and deploy this into my AWS account
+## Deployment Instructions
 
 ### Prerequisites
 
@@ -57,26 +55,9 @@ aws servicediscovery create-private-dns-namespace --name PLATFORM_NAME --vpc vpc
 aws servicediscovery get-operation --operation-id h2qe3s6dxftvvt7riu6lfy2f6c3jlhf4-je6chs2e
 ```
 
-### Customize the templates
-
-1. [Fork](https://github.com/awslabs/ecs-refarch-cloudformation#fork-destination-box) this GitHub repository.
-2. Clone the forked GitHub repository to your local machine.
-3. Modify the templates.
-4. Upload them to an Amazon S3 bucket of your choice.
-5. Either create a new CloudFormation stack by deploying the master.yaml template, or update your existing stack with your version of the templates.
-
-### Create a new ECS service
-
-1. Push your container to a registry somewhere (e.g., [Amazon ECR](https://aws.amazon.com/ecr/)).
-2. Copy one of the existing service templates in [services/*](/services).
-3. Update the `ContainerName` and `Image` parameters to point to your container image instead of the example container.
-4. Increment the `ListenerRule` priority number (no two services can have the same priority number - this is used to order the ALB path based routing rules).
-5. Copy one of the existing service definitions in [master.yaml](master.yaml) and point it at your new service template. Specify the HTTP `Path` at which you want the service exposed.
-6. Deploy the templates as a new stack, or as an update to an existing stack.
-
 ### Setup centralized container logging
 
-By default, the containers in your ECS tasks/services are already configured to send log information to CloudWatch Logs and retain them for 365 days. Within each service's template (in [services/*](services/)), a LogGroup is created that is named after the CloudFormation stack. All container logs are sent to that CloudWatch Logs log group.
+By default, the containers in your ECS tasks/services are already configured to send log information to CloudWatch Logs and retain them for 365 days. Within each service's template (in [cfn/app/*](cfn/app/)), a LogGroup is created that is named after the CloudFormation stack. All container logs are sent to that CloudWatch Logs log group.
 
 You can view the logs by looking in your [CloudWatch Logs console](https://console.aws.amazon.com/cloudwatch/home?#logs:) (make sure you are in the correct AWS region).
 
@@ -84,7 +65,12 @@ ECS also supports other logging drivers, including `syslog`, `journald`, `splunk
 
 For more information, see the [LogConfiguration](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html) API operation.
 
+*Note: Changing the log driver means that you will need to handle authorization to log groups outside of the container platform. (or simply accept that users can view each others logs)*
+
+
 ### Change the ECS host instance type
+
+*Note: This only applies if you are not deploying using ECS Fargate*
 
 This is specified in the [master.yaml](master.yaml) template.
 
@@ -103,6 +89,8 @@ ECS:
 ```
 
 ### Adjust the Auto Scaling parameters for ECS hosts and services
+
+*Note: This only applies if you are not deploying using ECS Fargate*
 
 The Auto Scaling group scaling policy provided by default launches and maintains a cluster of 4 ECS hosts distributed across two Availability Zones (min: 4, max: 4, desired: 4).
 
@@ -146,20 +134,7 @@ VPC:
 
 ### Update an ECS service to a new Docker image version
 
-ECS has the ability to perform rolling upgrades to your ECS services to minimize downtime during deployments. For more information, see [Updating a Service](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/update-service.html).
-
-To update one of your services to a new version, adjust the `Image` parameter in the service template (in [services/*](services/) to point to the new version of your container image. For example, if `1.0.0` was currently deployed and you wanted to update to `1.1.0`, you could update it as follows:
-
-``` YAML
-TaskDefinition:
-  Type: AWS::ECS::TaskDefinition
-  Properties:
-    ContainerDefinitions:
-      - Name: your-container
-        Image: registry.example.com/your-container:1.1.0
-```
-
-After you've updated the template, update the deployed CloudFormation stack; CloudFormation and ECS handle the rest.
+The platform users handle the definition of the container image they want to use, howver you can override certain properties in the app.yaml files being deployed by the platform.
 
 To adjust the rollout parameters (min/max number of tasks/containers to keep in service at any time), you need to configure `DeploymentConfiguration` for the ECS service.
 
@@ -183,23 +158,3 @@ The AWS SSM Run Command function, in the EC2 console, can be used to execute com
 ### Spot Instances and the Hibernate Agent
 
 In order to use Spot with this template, you will need to enable ```SpotPrice``` under the ```AWS::AutoScaling::LaunchConfiguration``` or add in ```AWS::EC2::SpotFleet``` support.  To fully use Hibernation with Spot instances, please review [Spot Instance Interruptions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html).
-
-### Add a new item to this list
-
-If you found yourself wishing this set of frequently asked questions had an answer for a particular problem, please [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/). The chances are that others will also benefit from having the answer listed here.
-
-## Contributing
-
-Please [create a new GitHub issue](https://github.com/awslabs/ecs-refarch-cloudformation/issues/new) for any feature requests, bugs, or documentation improvements.
-
-Where possible, please also [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/) for the change.
-
-## License
-
-Copyright 2011-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
-
-[http://aws.amazon.com/apache2.0/](http://aws.amazon.com/apache2.0/)
-
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
