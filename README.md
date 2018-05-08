@@ -4,7 +4,7 @@ This reference architecture provides a set of YAML templates for deploying a con
 
 ## Overview
 
-![infrastructure-overview](images/architecture-overview.png)
+![architecture-overview](images/architecture-overview.png)
 
 The architecture consists of two parts, the supporting platform and the management API.
 
