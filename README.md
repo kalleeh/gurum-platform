@@ -65,12 +65,11 @@ ECS also supports other logging drivers, including `syslog`, `journald`, `splunk
 
 For more information, see the [LogConfiguration](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html) API operation.
 
-*Note: Changing the log driver means that you will need to handle authorization to log groups outside of the container platform. (or simply accept that users can view each others logs)*
-
+> Note: Changing the log driver means that you will need to handle authorization to log groups outside of the container platform. (or simply accept that users can view each others logs)
 
 ### Change the ECS host instance type
 
-*Note: This only applies if you are not deploying using ECS Fargate*
+> Note: This only applies if you are not deploying using ECS Fargate
 
 This is specified in the [master.yaml](master.yaml) template.
 
@@ -90,7 +89,7 @@ ECS:
 
 ### Adjust the Auto Scaling parameters for ECS hosts and services
 
-*Note: This only applies if you are not deploying using ECS Fargate*
+> Note: This only applies if you are not deploying using ECS Fargate
 
 The Auto Scaling group scaling policy provided by default launches and maintains a cluster of 4 ECS hosts distributed across two Availability Zones (min: 4, max: 4, desired: 4).
 
