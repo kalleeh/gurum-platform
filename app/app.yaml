@@ -65,9 +65,7 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
           SecurityGroups:
-            - Fn::GetAtt:
-                - ApplicationServiceSecurityGroup
-                - GroupId
+            - !GetAtt ApplicationServiceSecurityGroup.GroupId
           Subnets:
             - !ImportValue PrivateSubnet1
             - !ImportValue PrivateSubnet2
@@ -82,10 +80,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      ExecutionRoleArn:
-        Fn::GetAtt:
-          - ApplicationContainerRole
-          - Arn
+      ExecutionRoleArn: !GetAtt ApplicationContainerRole.Arn
       ContainerDefinitions:
         - Name: web
           Essential: true
@@ -109,10 +104,8 @@ Resources:
   ApplicationServiceSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupName:
-        Fn::Sub: "ApplicationServiceSecurityGroup-${AWS::StackName}"
-      GroupDescription:
-        Fn::Sub: "Application Service Security Group (${AWS::StackName})"
+      GroupName: !Sub 'ApplicationServiceSecurityGroup-${AWS::StackName}'
+      GroupDescription: !Sub 'Application Service Security Group (${AWS::StackName})'
       SecurityGroupIngress:
         - CidrIp: "0.0.0.0/0"
           FromPort: "80"
@@ -167,8 +160,7 @@ Resources:
   ApplicationContainerRole:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName:
-        Fn::Sub: "ApplicationContainerRole-${AWS::StackName}"
+      RoleName: !Sub 'ApplicationContainerRole-${AWS::StackName}'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       AssumeRolePolicyDocument:
@@ -196,9 +188,7 @@ Resources:
           - Sid: ReadWriteFromApp
             Effect: Allow
             Principal:
-              Fn::GetAtt:
-                - ApplicationContainerRole
-                - Arn
+              - !GetAtt ApplicationContainerRole.Arn
             Action:
               - 's3:GetObject'
               - 's3:PutObject'
