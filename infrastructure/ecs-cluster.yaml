@@ -19,10 +19,6 @@ Parameters:
         Type: Number
         Default: 0
 
-    VPC:
-        Description: Choose which VPC this ECS cluster should be deployed to
-        Type: AWS::EC2::VPC::Id
-
     Subnets:
         Description: Choose which subnets this ECS cluster should be deployed to
         Type: List<AWS::EC2::Subnet::Id>
@@ -89,7 +85,7 @@ Resources:
             VPCZoneIdentifier: !Ref Subnets
             LaunchConfigurationName: !Ref ECSLaunchConfiguration
             MinSize: !Ref ClusterSize
-            MaxSize: 4
+            MaxSize: "4"
             DesiredCapacity: !Ref ClusterSize
             Tags:
                 - Key: Name

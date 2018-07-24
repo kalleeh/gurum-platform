@@ -17,19 +17,17 @@ Resources:
             - LifecycleHandlerFunction
             - Arn
           Protocol: lambda
-    DependsOn: LifecycleHandlerFunction
   InstanceTerminatingHook:
     Type: 'AWS::AutoScaling::LifecycleHook'
     Properties:
       AutoScalingGroupName: !Ref ECSAutoScalingGroupName
       DefaultResult: ABANDON
-      HeartbeatTimeout: '900'
+      HeartbeatTimeout: 900
       LifecycleTransition: 'autoscaling:EC2_INSTANCE_TERMINATING'
       NotificationTargetARN: !Ref NotificationTopic
       RoleARN: !GetAtt
         - AutoscalingNotificationRole
         - Arn
-    DependsOn: NotificationTopic
   AutoscalingNotificationRole:
     Type: 'AWS::IAM::Role'
     Properties:

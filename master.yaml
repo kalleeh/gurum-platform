@@ -52,7 +52,7 @@ Resources:
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.small
-                ClusterSize: 0
+                ClusterSize: "0"
                 VPC: !GetAtt VPC.Outputs.VPC
                 SecurityGroup: !GetAtt SecurityGroups.Outputs.ECSHostSecurityGroup
                 Subnets: !GetAtt VPC.Outputs.PrivateSubnets

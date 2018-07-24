@@ -168,7 +168,7 @@ Resources:
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
-                Version: 1
+                Version: "1"
                 Provider: GitHub
               Configuration:
                 Owner: !Ref GitHubUser
@@ -180,11 +180,11 @@ Resources:
               RunOrder: 1
         - Name: Build
           Actions:
-            - Name: Build
+            - Name: ContainerBuild
               ActionTypeId:
                 Category: Build
                 Owner: AWS
-                Version: 1
+                Version: "1"
                 Provider: CodeBuild
               Configuration:
                 ProjectName: !Ref CodeBuildProject
@@ -195,9 +195,9 @@ Resources:
               RunOrder: 1
         - !If
           - DevStageExist
-          - Name: DeployDev
+          - Name: Development
             Actions:
-              - Name: Deploy
+              - Name: DeployDev
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
@@ -213,9 +213,9 @@ Resources:
           - !Ref AWS::NoValue
         - !If
           - TestStageExist
-          - Name: DeployTest
+          - Name: Test
             Actions:
-              - Name: Deploy
+              - Name: DeployTest
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
@@ -240,13 +240,13 @@ Resources:
                     Version: 1
                     Provider: Manual
           - !Ref AWS::NoValue
-        - Name: DeployProd
+        - Name: Production
           Actions:
-            - Name: Deploy
+            - Name: DeployProd
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
-                Version: 1
+                Version: "1"
                 Provider: ECS
               Configuration:
                 ClusterName: !ImportValue Cluster

@@ -108,8 +108,8 @@ Resources:
       GroupDescription: !Sub 'Application Service Security Group (${AWS::StackName})'
       SecurityGroupIngress:
         - CidrIp: "0.0.0.0/0"
-          FromPort: "80"
-          ToPort: "80"
+          FromPort: 80
+          ToPort: 80
           IpProtocol: tcp
       VpcId: !ImportValue VPC
 
@@ -124,7 +124,7 @@ Resources:
       VpcId: !ImportValue VPC
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 50
+          Value: "50"
       Matcher:
           HttpCode: 200-299
       HealthCheckIntervalSeconds: 10
@@ -164,9 +164,9 @@ Resources:
       DnsConfig: 
         DnsRecords:
           - Type: A
-            TTL: 30
+            TTL: "30"
           - Type: AAAA
-            TTL: 30
+            TTL: "30"
         NamespaceId: !ImportValue NamespaceId
       Name: !Ref AWS::StackName
 

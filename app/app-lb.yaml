@@ -104,8 +104,8 @@ Resources:
       GroupDescription: !Sub 'Application Service Security Group (${AWS::StackName})'
       SecurityGroupIngress:
         - CidrIp: "0.0.0.0/0"
-          FromPort: "80"
-          ToPort: "80"
+          FromPort: 80
+          ToPort: 80
           IpProtocol: tcp
       VpcId: !ImportValue VPC
 
@@ -120,7 +120,7 @@ Resources:
       VpcId: !ImportValue VPC
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 50
+          Value: "50"
       Matcher:
           HttpCode: 200-299
       HealthCheckIntervalSeconds: 10
@@ -166,18 +166,6 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
-  
-  ApplicationServiceSecurityGroup:
-    Type: "AWS::EC2::SecurityGroup"
-    Properties:
-      GroupName: !Sub 'ApplicationServiceSecurityGroup-${AWS::StackName}'
-      GroupDescription: !Sub 'Application Service Security Group (${AWS::StackName})'
-      SecurityGroupIngress:
-        - CidrIp: "0.0.0.0/0"
-          FromPort: "0"
-          ToPort: "65535"
-          IpProtocol: tcp
-      VpcId: !ImportValue VPC
 
   ############################
   # Load Balancer Definition #
@@ -201,12 +189,12 @@ Resources:
       GroupDescription: !Sub 'LoadBalancer Security Group (${AWS::StackName})'
       SecurityGroupIngress:
         - CidrIp: "0.0.0.0/0"
-          FromPort: "80"
-          ToPort: "80"
+          FromPort: 80
+          ToPort: 80
           IpProtocol: tcp
         - CidrIp: "0.0.0.0/0"
-          FromPort: "443"
-          ToPort: "443"
+          FromPort: 443
+          ToPort: 443
           IpProtocol: tcp
       VpcId: !ImportValue VPC
 

@@ -49,7 +49,7 @@ Resources:
   ECS:
     Properties:
       Parameters:
-        ClusterSize: 0
+        ClusterSize: "0"
         EnvironmentName:
           Ref: AWS::StackName
         InstanceType: t2.small
