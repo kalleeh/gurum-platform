@@ -19,13 +19,22 @@ Parameters:
         Type: Number
         Default: 0
 
+    VPC:
+        Type: AWS::EC2::VPC::Id
+        Description: Choose which VPC the security groups should be deployed to
+
     Subnets:
         Description: Choose which subnets this ECS cluster should be deployed to
         Type: List<AWS::EC2::Subnet::Id>
 
-    SecurityGroup:
-        Description: Select the Security Group to use for the ECS cluster hosts
+    LoadBalancerSecurityGroup:
+        Description: Security Group to allow inbound communication to the hosts from the ALB
         Type: AWS::EC2::SecurityGroup::Id
+
+Conditions:
+
+    CreateEC2s:
+        !Not [!Equals [!Ref ClusterSize, 0]]
 
 Mappings:
 
@@ -81,6 +90,7 @@ Resources:
 
     ECSAutoScalingGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
+        Condition: CreateEC2s
         Properties:
             VPCZoneIdentifier: !Ref Subnets
             LaunchConfigurationName: !Ref ECSLaunchConfiguration
@@ -109,11 +119,12 @@ Resources:
 
     ECSLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration
+        Condition: CreateEC2s
         Properties:
             ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
             InstanceType: !Ref InstanceType
             SecurityGroups:
-                - !Ref SecurityGroup
+                - !Ref ECSHostSecurityGroup
             IamInstanceProfile: !Ref ECSInstanceProfile
             UserData:
                 "Fn::Base64": !Sub |
@@ -213,6 +224,22 @@ Resources:
                                     - /etc/awslogs/awslogs.conf
                                     - /etc/awslogs/awscli.conf
 
+    # This security group defines who/where is allowed to access the ECS hosts directly.
+    # By default we're just allowing access from the load balancer.  If you want to SSH
+    # into the hosts, or expose non-load balanced services you can open their ports here.
+    ECSHostSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            VpcId: !Ref VPC
+            GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
+            SecurityGroupIngress:
+                # Only allow inbound access to ECS from the ELB
+                - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+                  IpProtocol: "-1"
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName}-ECS-Hosts
+
     # This IAM Role is attached to all of the ECS hosts. It is based on the default role
     # published here:
     # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
@@ -223,6 +250,7 @@ Resources:
 
     ECSRole:
         Type: AWS::IAM::Role
+        Condition: CreateEC2s
         Properties:
             Path: /
             RoleName: !Sub ${EnvironmentName}-ECSRole-${AWS::Region}
@@ -297,6 +325,7 @@ Resources:
 
     ECSInstanceProfile:
         Type: AWS::IAM::InstanceProfile
+        Condition: CreateEC2s
         Properties:
             Path: /
             Roles:
@@ -304,6 +333,7 @@ Resources:
 
     ECSServiceAutoScalingRole:
         Type: AWS::IAM::Role
+        Condition: CreateEC2s
         Properties:
             AssumeRolePolicyDocument:
                 Version: '2012-10-17'
@@ -337,9 +367,16 @@ Outputs:
           Name: Cluster
 
     ECSServiceAutoScalingRole:
+        Condition: CreateEC2s
         Description: A reference to ECS service auto scaling role
         Value: !GetAtt ECSServiceAutoScalingRole.Arn
 
     ECSAutoScalingGroupName:
+        Condition: CreateEC2s
         Description: A reference to ECS AutoScaling Group Name
         Value: !Ref ECSAutoScalingGroup
+
+    ECSHostSecurityGroup:
+        Condition: CreateEC2s
+        Description: A reference to the security group for ECS hosts
+        Value: !Ref ECSHostSecurityGroup

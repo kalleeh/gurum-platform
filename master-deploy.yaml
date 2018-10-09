@@ -1,4 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  ASGExists:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: ClusterSize
+      - '0'
 Description: '
 
   This template deploys a VPC, with a pair of public and private subnets spread across
@@ -13,16 +19,17 @@ Description: '
   Paul Maddox <pmaddox@amazon.com>
 
   '
+Parameters:
+  ClusterSize:
+    Default: 0
+    Description: How many ECS hosts do you want to initially deploy?
+    Type: Number
 Resources:
   ALB:
     Properties:
       Parameters:
         EnvironmentName:
           Ref: AWS::StackName
-        SecurityGroup:
-          Fn::GetAtt:
-          - SecurityGroups
-          - Outputs.LoadBalancerSecurityGroup
         Subnets:
           Fn::GetAtt:
           - VPC
@@ -31,7 +38,7 @@ Resources:
           Fn::GetAtt:
           - VPC
           - Outputs.VPC
-      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/e083b7207af5d08029e42ab9c4563e55.template
+      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/bcdff99295750531dc10eadb33dc253d.template
     Type: AWS::CloudFormation::Stack
   AppDeploymentRole:
     Properties:
@@ -49,14 +56,15 @@ Resources:
   ECS:
     Properties:
       Parameters:
-        ClusterSize: "0"
+        ClusterSize:
+          Ref: ClusterSize
         EnvironmentName:
           Ref: AWS::StackName
         InstanceType: t2.small
-        SecurityGroup:
+        LoadBalancerSecurityGroup:
           Fn::GetAtt:
-          - SecurityGroups
-          - Outputs.ECSHostSecurityGroup
+          - ALB
+          - Outputs.LoadBalancerSecurityGroup
         Subnets:
           Fn::GetAtt:
           - VPC
@@ -65,9 +73,10 @@ Resources:
           Fn::GetAtt:
           - VPC
           - Outputs.VPC
-      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/067a590f3f20658d816893c6874d2e8b.template
+      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/d0077a87b018e8b5d347058f49c63742.template
     Type: AWS::CloudFormation::Stack
   LifecycleHook:
+    Condition: ASGExists
     Properties:
       Parameters:
         Cluster:
@@ -78,18 +87,7 @@ Resources:
           Fn::GetAtt:
           - ECS
           - Outputs.ECSAutoScalingGroupName
-      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/88a13c85dd641a364a1f19d740312c0c.template
-    Type: AWS::CloudFormation::Stack
-  SecurityGroups:
-    Properties:
-      Parameters:
-        EnvironmentName:
-          Ref: AWS::StackName
-        VPC:
-          Fn::GetAtt:
-          - VPC
-          - Outputs.VPC
-      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/8e25a3249c8559e105cfe96ba4cfc654.template
+      TemplateURL: https://s3.amazonaws.com/storage-kalleh/cfn/infrastructure/e21df873cc7d465613106be530dbb61a.template
     Type: AWS::CloudFormation::Stack
   ServiceDiscovery:
     Properties:

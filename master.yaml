@@ -13,6 +13,18 @@ Description: >
     Modified By: Karl Wallbom <wallbomk@amazon.com>
     Author: Paul Maddox <pmaddox@amazon.com>
 
+Parameters:
+
+    ClusterSize:
+        Description: How many ECS hosts do you want to initially deploy?
+        Type: Number
+        Default: 0
+
+Conditions:
+
+    ASGExists:
+        !Not [!Equals [!Ref ClusterSize, "0"]]
+
 Resources:
 
     VPC:
@@ -27,14 +39,6 @@ Resources:
                 PrivateSubnet1CIDR: 10.180.24.0/21
                 PrivateSubnet2CIDR: 10.180.32.0/21
 
-    SecurityGroups:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: infrastructure/security-groups.yaml
-            Parameters:
-                EnvironmentName: !Ref AWS::StackName
-                VPC: !GetAtt VPC.Outputs.VPC
-
     ALB:
         Type: AWS::CloudFormation::Stack
         Properties:
@@ -43,7 +47,6 @@ Resources:
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
                 Subnets: !GetAtt VPC.Outputs.PublicSubnets
-                SecurityGroup: !GetAtt SecurityGroups.Outputs.LoadBalancerSecurityGroup
 
     ECS:
         Type: AWS::CloudFormation::Stack
@@ -52,13 +55,14 @@ Resources:
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.small
-                ClusterSize: "0"
+                ClusterSize: !Ref ClusterSize
                 VPC: !GetAtt VPC.Outputs.VPC
-                SecurityGroup: !GetAtt SecurityGroups.Outputs.ECSHostSecurityGroup
                 Subnets: !GetAtt VPC.Outputs.PrivateSubnets
+                LoadBalancerSecurityGroup: !GetAtt ALB.Outputs.LoadBalancerSecurityGroup
 
     LifecycleHook:
         Type: AWS::CloudFormation::Stack
+        Condition: ASGExists
         Properties:
             TemplateURL: infrastructure/lifecyclehook.yaml
             Parameters:
