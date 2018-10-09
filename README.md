@@ -45,15 +45,15 @@ Since [ECS Service Discovery](https://docs.aws.amazon.com/AmazonECS/latest/devel
 
 1. Create a new service discovery namespace for our cluster
 
-``` bash
-aws servicediscovery create-private-dns-namespace --name PLATFORM_NAME --vpc vpc-abcd1234 --region us-east-1
-```
+    ``` bash
+    aws servicediscovery create-private-dns-namespace --name PLATFORM_NAME --vpc vpc-abcd1234 --region us-east-1
+    ```
 
 2. Using the OperationId from the previous output, verify that the private namespace was created successfully.
 
-``` bash
-aws servicediscovery get-operation --operation-id h2qe3s6dxftvvt7riu6lfy2f6c3jlhf4-je6chs2e
-```
+    ``` bash
+    aws servicediscovery get-operation --operation-id h2qe3s6dxftvvt7riu6lfy2f6c3jlhf4-je6chs2e
+    ```
 
 ### Setup centralized container logging
 

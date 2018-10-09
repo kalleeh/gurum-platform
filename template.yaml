@@ -9,7 +9,7 @@ Description: >
     It then deploys a highly available ECS cluster using an AutoScaling Group, with
     ECS hosts distributed across multiple Availability Zones.
 
-    Last Modified: 11th April 2018
+    Last Modified: 9th October 2018
     Modified By: Karl Wallbom <wallbomk@amazon.com>
     Author: Paul Maddox <pmaddox@amazon.com>
 

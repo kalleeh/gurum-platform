@@ -1,10 +1,7 @@
 .DS_Store
-master-deploy.yml
+template-deploy.yml
 
 # Environments
 .env
 .venv
 .vscode
-
-# mkdocs documentation
-/site
