@@ -74,22 +74,3 @@ Resources:
             Parameters:
                 NamespaceName: !GetAtt ECS.Outputs.Cluster
                 VPC: !GetAtt VPC.Outputs.VPC
-
-    AppDeploymentRole:
-        Type: AWS::IAM::Role
-        Properties:
-            Path: /
-            RoleName: !Sub ${AWS::StackName}-AppDeploymentRole-${AWS::Region}
-            AssumeRolePolicyDocument: |
-                {
-                    "Statement": [{
-                        "Action": "sts:AssumeRole",
-                        "Effect": "Allow",
-                        "Principal": {
-                            "Service": "cloudformation.amazonaws.com"
-                        }
-                    }]
-                }
-            ManagedPolicyArns:
-              - arn:aws:iam::aws:policy/PowerUserAccess
-              - arn:aws:iam::aws:policy/IAMFullAccess
