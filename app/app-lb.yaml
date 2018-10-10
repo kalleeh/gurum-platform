@@ -100,8 +100,8 @@ Resources:
   ApplicationServiceSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupName: !Sub 'ApplicationServiceSecurityGroup-${AWS::StackName}'
-      GroupDescription: !Sub 'Application Service Security Group (${AWS::StackName})'
+      GroupName: !Sub 'platform-sg-${AWS::StackName}'
+      GroupDescription: !Sub '(${AWS::StackName}) Application Service SG'
       SecurityGroupIngress:
         - CidrIp: "0.0.0.0/0"
           FromPort: 80
@@ -156,7 +156,7 @@ Resources:
   ApplicationContainerRole:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: !Sub 'ApplicationContainerRole-${AWS::StackName}'
+      RoleName: !Sub 'platform-role-${AWS::StackName}'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       AssumeRolePolicyDocument:
