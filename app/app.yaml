@@ -31,7 +31,12 @@ Parameters:
     Description: Name of the Hosted Zone to register service with
     Type: String
     Default: apps.gureu.me
-  
+
+  ServiceDiscoveryTTL:
+    Type: String
+    Description: The amount of time, in seconds, that you want DNS resolvers to cache the settings for this record.
+    Default: '60'
+
   ServiceS3:
     Description: Create an S3 bucket and connect it to the app
     Default: false
@@ -156,19 +161,19 @@ Resources:
       AliasTarget:
         HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
         DNSName: !ImportValue LoadBalancerDNSName
-
-  ServiceAutonaming:
-    Type: "AWS::ServiceDiscovery::Service"
+  
+  ServiceDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
     Properties:
-      Description: Autonaming for Service Discovery
       DnsConfig: 
-        DnsRecords:
-          - Type: A
-            TTL: "30"
-          - Type: AAAA
-            TTL: "30"
         NamespaceId: !ImportValue NamespaceId
-      Name: !Ref AWS::StackName
+        DnsRecords:
+        - Type: SRV
+          TTL: !Ref ServiceDiscoveryTTL
+      HealthCheckCustomConfig: 
+        FailureThreshold: 1
+      Name: 
+        Ref: AWS::StackName
 
   ApplicationContainerRole:
     Type: "AWS::IAM::Role"

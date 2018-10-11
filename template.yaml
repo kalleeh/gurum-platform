@@ -72,5 +72,5 @@ Resources:
         Properties:
             TemplateURL: infrastructure/service-discovery.yaml
             Parameters:
-                NamespaceName: !GetAtt ECS.Outputs.Cluster
+                NamespaceName: !Join ['', [!GetAtt ECS.Outputs.Cluster, '.local']]
                 VPC: !GetAtt VPC.Outputs.VPC
