@@ -1,0 +1,182 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+    This template deploys a Cognito User Pool and ties it together with Federated Identities.
+
+Parameters:
+
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+  
+  # Email address for Cognito Admin user
+  CognitoAdminEmail:
+    Type: String
+    Default: cognitoadmin@example.com
+    AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+    Description: E-mail address of the Cognito admin
+
+Resources:
+
+  #
+  # Cognito and IAM
+  #
+  # Creates a user pool in cognito to auth against
+  UserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      UserPoolName: !Sub ${EnvironmentName}_platform_access
+      AutoVerifiedAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+      EmailVerificationSubject: !Ref AWS::StackName
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+
+  # Creates a needed group in Cognito for Kibana access
+  UserPoolGroup:
+    Type: "AWS::Cognito::UserPoolGroup"
+    Properties:
+      Description: 'User pool group for Kibana access'
+      GroupName: !Sub ${EnvironmentName}_kibana_access_group
+      Precedence: 0
+      UserPoolId: !Ref UserPool
+
+  # Creates a User Pool Client to be used by the identity pool
+  UserPoolClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      ClientName: !Sub ${EnvironmentName}-client
+      GenerateSecret: false
+      UserPoolId: !Ref UserPool
+
+  # Creates a federated Identity pool
+  IdentityPool:
+    Type: 'AWS::Cognito::IdentityPool'
+    Properties:
+      IdentityPoolName: !Sub ${EnvironmentName}Identity
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+  # Create a role for unauthorized access to AWS resources. Very limited access.
+  # Only allows users in the previously created Identity Pool
+  CognitoUnAuthorizedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': unauthenticated
+      Policies:
+        - PolicyName: 'CognitoUnauthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'mobileanalytics:PutEvents'
+                  - 'cognito-sync:BulkPublish'
+                  - 'cognito-sync:DescribeIdentityPoolUsage'
+                  - 'cognito-sync:GetBulkPublishDetails'
+                  - 'cognito-sync:GetCognitoEvents'
+                  - 'cognito-sync:GetIdentityPoolConfiguration'
+                  - 'cognito-sync:ListIdentityPoolUsage'
+                  - 'cognito-sync:SetCognitoEvents'
+                  - 'congito-sync:SetIdentityPoolConfiguration'
+                Resource: !Sub 'arn:aws:cognito-identity:${AWS::Region}:${AWS::AccountId}:identitypool/${IdentityPool}'
+
+  # Create a role for authorized access to AWS resources.
+  # Only allows users in the previously created Identity Pool
+  CognitoAuthorizedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+        - PolicyName: 'CognitoAuthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'mobileanalytics:PutEvents'
+                  - 'cognito-sync:BulkPublish'
+                  - 'cognito-sync:DescribeIdentityPoolUsage'
+                  - 'cognito-sync:GetBulkPublishDetails'
+                  - 'cognito-sync:GetCognitoEvents'
+                  - 'cognito-sync:GetIdentityPoolConfiguration'
+                  - 'cognito-sync:ListIdentityPoolUsage'
+                  - 'cognito-sync:SetCognitoEvents'
+                  - 'congito-sync:SetIdentityPoolConfiguration'
+                  - 'cognito-identity:DeleteIdentityPool'
+                  - 'cognito-identity:DescribeIdentityPool'
+                  - 'cognito-identity:GetIdentityPoolRoles'
+                  - 'cognito-identity:GetOpenIdTokenForDeveloperIdentity'
+                  - 'cognito-identity:ListIdentities'
+                  - 'cognito-identity:LookupDeveloperIdentity'
+                  - 'cognito-identity:MergeDeveloperIdentities'
+                  - 'cognito-identity:UnlikeDeveloperIdentity'
+                  - 'cognito-identity:UpdateIdentityPool'
+                Resource: !Sub 'arn:aws:cognito-identity:${AWS::Region}:${AWS::AccountId}:identitypool/${IdentityPool}'
+
+  CognitoESAccessRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonESCognitoAccess
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'es.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+
+  # Assigns the roles to the Identity Pool
+  IdentityPoolRoleMapping:
+    Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+
+  AdminUser:
+    Type: 'AWS::Cognito::UserPoolUser'
+    Properties:
+      DesiredDeliveryMediums:
+        - 'EMAIL'
+      UserAttributes:
+        - Name: email
+          Value: !Ref CognitoAdminEmail
+      Username: !Ref CognitoAdminEmail
+      UserPoolId: !Ref UserPool

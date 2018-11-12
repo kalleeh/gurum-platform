@@ -164,7 +164,7 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: App
+            - Name: Source
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
@@ -201,7 +201,7 @@ Resources:
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
-                  Version: 1
+                  Version: "1"
                   Provider: ECS
                 Configuration:
                   ClusterName: !ImportValue Cluster
@@ -219,7 +219,7 @@ Resources:
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
-                  Version: 1
+                  Version: "1"
                   Provider: ECS
                 Configuration:
                   ClusterName: !ImportValue Cluster
@@ -237,7 +237,7 @@ Resources:
                 ActionTypeId:
                     Category: Approval
                     Owner: AWS
-                    Version: 1
+                    Version: "1"
                     Provider: Manual
           - !Ref AWS::NoValue
         - Name: Production

@@ -18,6 +18,13 @@ Parameters:
         Type: Number
         Default: 0
 
+    # Email address for Cognito Admin user
+    CognitoAdminEmail:
+        Type: String
+        Default: cognitoadmin@example.com
+        AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        Description: E-mail address of the Cognito admin
+
 Conditions:
 
     ASGExists:
@@ -74,3 +81,11 @@ Resources:
             Parameters:
                 NamespaceName: !Join ['', [!GetAtt ECS.Outputs.Cluster, '.local']]
                 VPC: !GetAtt VPC.Outputs.VPC
+
+    Cognito:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: infrastructure/cognito.yaml
+            Parameters:
+                EnvironmentName: !Ref AWS::StackName
+                CognitoAdminEmail: !Ref CognitoAdminEmail
