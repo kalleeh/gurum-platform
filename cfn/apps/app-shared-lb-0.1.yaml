@@ -27,6 +27,10 @@ Parameters:
     Type: String
     Default: nginx:latest
 
+  GroupName:
+    Type: String
+    Description: The prefix to be added to resources to manage IAM Role permissions
+
   HostedZoneName:
     Description: Name of the Hosted Zone to register service with
     Type: String
@@ -36,16 +40,6 @@ Parameters:
     Type: String
     Description: The amount of time, in seconds, that you want DNS resolvers to cache the settings for this record.
     Default: '60'
-
-  ServiceS3:
-    Description: Create an S3 bucket and connect it to the app
-    Default: false
-    Type: String
-    AllowedValues: [true, false]
-
-Conditions:
-  CreateServiceS3:
-    !Equals [true, !Ref ServiceS3]
 
 Resources:
 
@@ -96,14 +90,14 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-                awslogs-group: !Sub 'platform-app-${AWS::StackName}'
+                awslogs-group: !Ref CloudWatchLogsGroup
                 awslogs-region: !Ref AWS::Region
-                awslogs-stream-prefix: !Ref AWS::StackName
+                awslogs-stream-prefix: 'app'
 
   CloudWatchLogsGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub 'platform-app-${AWS::StackName}'
+      LogGroupName: !Sub 'app-${GroupName}-${AWS::StackName}'
       RetentionInDays: 365
 
   ApplicationServiceSecurityGroup:
