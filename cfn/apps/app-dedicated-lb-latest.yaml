@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Platform App on Shared Load Balancer
+Description: Platform Service with Dedicated Load Balancer
 
 Parameters:
 
@@ -13,10 +13,6 @@ Parameters:
     Type: Number
     Default: 1
 
-  Listener:
-    Description: The Application Load Balancer listener to register with
-    Type: String
-
   HealthCheckPath:
     Description: The health check path to register with the Application Load Balancer
     Type: String
@@ -27,19 +23,10 @@ Parameters:
     Type: String
     Default: nginx:latest
 
-  GroupName:
-    Type: String
-    Description: The prefix to be added to resources to manage IAM Role permissions
-
   HostedZoneName:
     Description: Name of the Hosted Zone to register service with
     Type: String
     Default: apps.gureu.me
-
-  ServiceDiscoveryTTL:
-    Type: String
-    Description: The amount of time, in seconds, that you want DNS resolvers to cache the settings for this record.
-    Default: '60'
 
 Resources:
 
@@ -90,14 +77,14 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-                awslogs-group: !Ref CloudWatchLogsGroup
+                awslogs-group: !Sub 'platform-app-${AWS::StackName}'
                 awslogs-region: !Ref AWS::Region
-                awslogs-stream-prefix: 'app'
+                awslogs-stream-prefix: !Ref AWS::StackName
 
   CloudWatchLogsGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub 'app-${GroupName}-${AWS::StackName}'
+      LogGroupName: !Sub 'platform-app-${AWS::StackName}'
       RetentionInDays: 365
 
   ApplicationServiceSecurityGroup:
@@ -135,7 +122,7 @@ Resources:
   ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      ListenerArn: !Ref Listener
+      ListenerArn: !Ref LoadBalancerListener
       Priority: !Ref Priority
       Conditions:
         - Field: host-header
@@ -153,21 +140,8 @@ Resources:
       Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
       Type: A
       AliasTarget:
-        HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
-        DNSName: !ImportValue LoadBalancerDNSName
-  
-  ServiceDiscoveryService:
-    Type: AWS::ServiceDiscovery::Service
-    Properties:
-      DnsConfig: 
-        NamespaceId: !ImportValue NamespaceId
-        DnsRecords:
-        - Type: SRV
-          TTL: !Ref ServiceDiscoveryTTL
-      HealthCheckCustomConfig: 
-        FailureThreshold: 1
-      Name: 
-        Ref: AWS::StackName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+        DNSName: !GetAtt LoadBalancer.DNSName
 
   ApplicationContainerRole:
     Type: "AWS::IAM::Role"
@@ -183,9 +157,77 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
 
+  ############################
+  # Load Balancer Definition #
+  ############################
+
+  LoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name:
+        Ref: AWS::StackName
+      SecurityGroups:
+        - !GetAtt LoadBalancerSecurityGroup.GroupId
+      Subnets:
+        - !ImportValue PublicSubnet1
+        - !ImportValue PublicSubnet2
+
+  LoadBalancerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Sub 'LoadBalancerSecurityGroup-${AWS::StackName}'
+      GroupDescription: !Sub 'LoadBalancer Security Group (${AWS::StackName})'
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+        - CidrIp: "0.0.0.0/0"
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      VpcId: !ImportValue VPC
+
+  LoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn:
+        Ref: LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup
+          Type: forward
+
+  ###############################
+  # Backing Services Definition #
+  ###############################
+
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Condition: CreateServiceS3
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Id: Policy
+        Version: 2012-10-17
+        Statement:
+          - Sid: ReadWriteFromApp
+            Effect: Allow
+            Principal:
+              - !GetAtt ApplicationContainerRole.Arn
+            Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+      Bucket: !Ref S3Bucket
+
 Outputs:
   Endpoint:
     Value: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
-
-  ServiceRole:
-    Value: !GetAtt ApplicationContainerRole.Arn

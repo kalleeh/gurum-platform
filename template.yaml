@@ -28,7 +28,7 @@ Resources:
     VPC:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: infrastructure/vpc.yaml
+            TemplateURL: platform-cfn/vpc.yaml
             Parameters:
                 EnvironmentName:    !Ref AWS::StackName
                 VpcCIDR:            10.180.0.0/16
@@ -40,7 +40,7 @@ Resources:
     ALB:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: infrastructure/load-balancers.yaml
+            TemplateURL: platform-cfn/load-balancers.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
@@ -49,7 +49,7 @@ Resources:
     ECS:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: infrastructure/ecs-cluster.yaml
+            TemplateURL: platform-cfn/ecs-cluster.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.small
@@ -62,7 +62,7 @@ Resources:
         Type: AWS::CloudFormation::Stack
         Condition: ASGExists
         Properties:
-            TemplateURL: infrastructure/lifecyclehook.yaml
+            TemplateURL: platform-cfn/lifecyclehook.yaml
             Parameters:
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 ECSAutoScalingGroupName: !GetAtt ECS.Outputs.ECSAutoScalingGroupName
@@ -70,7 +70,7 @@ Resources:
     ServiceDiscovery:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: infrastructure/service-discovery.yaml
+            TemplateURL: platform-cfn/service-discovery.yaml
             Parameters:
                 NamespaceName: !Join ['', [!GetAtt ECS.Outputs.Cluster, '.local']]
                 VPC: !GetAtt VPC.Outputs.VPC
