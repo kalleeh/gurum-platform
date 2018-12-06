@@ -183,36 +183,6 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
 
-  ###############################
-  # Backing Services Definition #
-  ###############################
-
-  S3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Condition: CreateServiceS3
-
-  BucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
-    Condition: CreateServiceS3
-    Properties:
-      PolicyDocument:
-        Id: Policy
-        Version: 2012-10-17
-        Statement:
-          - Sid: ReadWriteFromApp
-            Effect: Allow
-            Principal:
-              - !GetAtt ApplicationContainerRole.Arn
-            Action:
-              - 's3:GetObject'
-              - 's3:PutObject'
-            Resource: !Join 
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref S3Bucket
-                - /*
-      Bucket: !Ref S3Bucket
-
 Outputs:
   Endpoint:
     Value: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]

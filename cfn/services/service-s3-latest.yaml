@@ -3,15 +3,9 @@ Description: S3 Backing Service
 
 Parameters:
 
-#  LinkedRoles:
-#    Description: Comma-separated list for role names to add permissions to
-#    Type: AWS::SSM::Parameter
-#    Default: /gureume/services/myservicenamespace/linked_roles
-    
-  LinkedRoles:
+  ServiceBindings:
     Description: Comma-separated list for role names to add permissions to
     Type: String
-    Default: "arn:aws:iam::789073296014:role/gureume-team1-role,arn:aws:iam::789073296014:role/gureume-team2-role"
 
 Resources:
 
@@ -31,12 +25,28 @@ Resources:
               AWS: !Split
                 - ','
                 - !Sub
-                  - '${LinkedRolesList}'
-                  - LinkedRolesList: !Join [',', [ !Ref LinkedRoles ] ]
+                  - '${ServiceBindingsList}'
+                  - ServiceBindingsList: !Join [',', [ !Ref ServiceBindings ] ]
             Action:
               - 's3:GetObject'
               - 's3:PutObject'
-            Resource: !Join [ '', [ 'arn:aws:s3:::', !Ref S3Bucket, '/*' ] ]
+            Resource: !Sub arn:${AWS::Partition}:s3:::${S3Bucket}/*
+          - Sid: DenyUnEncryptedObjectUploads
+            Effect: Deny
+            Principal: '*'
+            Action: s3:PutObject
+            Resource: !Sub arn:${AWS::Partition}:s3:::${S3Bucket}/*
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: aws:kms
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource: !Sub arn:${AWS::Partition}:s3:::${S3Bucket}/*
+            Condition:
+              Bool:
+                aws:SecureTransport": false
       Bucket: !Ref S3Bucket
 
 Outputs:

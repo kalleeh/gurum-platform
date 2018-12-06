@@ -3,15 +3,10 @@ Description: S3 Backing Service
 
 Parameters:
 
-#  LinkedRoles:
-#    Description: Comma-separated list for role names to add permissions to
-#    Type: AWS::SSM::Parameter
-#    Default: /gureume/services/myservicenamespace/linked_roles
-    
-  LinkedRoles:
+  ServiceBindings:
     Description: Comma-separated list for role names to add permissions to
     Type: String
-    Default: "arn:aws:iam::789073296014:role/gureume-team1-role,arn:aws:iam::789073296014:role/gureume-team2-role"
+    Default: ""
 
 Resources:
 
@@ -31,8 +26,8 @@ Resources:
               AWS: !Split
                 - ','
                 - !Sub
-                  - '${LinkedRolesList}'
-                  - LinkedRolesList: !Join [',', [ !Ref LinkedRoles ] ]
+                  - '${ServiceBindingsList}'
+                  - ServiceBindingsList: !Join [',', [ !Ref ServiceBindings ] ]
             Action:
               - 's3:GetObject'
               - 's3:PutObject'
