@@ -179,6 +179,7 @@ Resources:
       RoleName: !Sub 'platform-role-${AWS::StackName}'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
       AssumeRolePolicyDocument:
         Version: "2008-10-17"
         Statement:
