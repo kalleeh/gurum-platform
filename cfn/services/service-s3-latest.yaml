@@ -25,7 +25,7 @@ Resources:
               AWS: !Split
                 - ','
                 - !Sub
-                  - '${ServiceBindingsList}'
+                  - 'arn:aws:iam::{AWS::Account}:role/platform-role-${ServiceBindingsList}'
                   - ServiceBindingsList: !Join [',', [ !Ref ServiceBindings ] ]
             Action:
               - 's3:GetObject'
