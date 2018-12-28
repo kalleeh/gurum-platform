@@ -20,7 +20,7 @@ Parameters:
   HealthCheckPath:
     Description: The health check path to register with the Application Load Balancer
     Type: String
-    Default: /health
+    Default: /
 
   DockerImage:
     Description: Docker image to start the container with

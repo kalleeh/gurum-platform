@@ -20,7 +20,7 @@ Parameters:
   HealthCheckPath:
     Description: The health check path to register with the Application Load Balancer
     Type: String
-    Default: /health
+    Default: /
 
   DockerImage:
     Description: Docker image to start the container with
@@ -68,6 +68,10 @@ Resources:
           Subnets:
             - !ImportValue PrivateSubnet1
             - !ImportValue PrivateSubnet2
+      ServiceRegistries:
+        -
+          Port: 80
+          RegistryArn: !GetAtt ServiceDiscoveryService.Arn
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -175,6 +179,7 @@ Resources:
       RoleName: !Sub 'platform-role-${AWS::StackName}'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
       AssumeRolePolicyDocument:
         Version: "2008-10-17"
         Statement:
