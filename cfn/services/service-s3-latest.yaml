@@ -25,7 +25,7 @@ Resources:
               AWS: !Split
                 - ','
                 - !Sub
-                  - 'arn:aws:iam::{AWS::Account}:role/platform-role-${ServiceBindingsList}'
+                  - 'arn:aws:iam::${AWS::AccountId}:role/platform-role-${ServiceBindingsList}'
                   - ServiceBindingsList: !Join [',', [ !Ref ServiceBindings ] ]
             Action:
               - 's3:GetObject'
@@ -46,7 +46,7 @@ Resources:
             Resource: !Sub arn:${AWS::Partition}:s3:::${S3Bucket}/*
             Condition:
               Bool:
-                aws:SecureTransport": false
+                aws:SecureTransport: false
       Bucket: !Ref S3Bucket
 
 Outputs:
