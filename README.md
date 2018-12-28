@@ -138,3 +138,27 @@ The AWS SSM Run Command function, in the EC2 console, can be used to execute com
 ### Spot Instances and the Hibernate Agent
 
 In order to use Spot with this template, you will need to enable ```SpotPrice``` under the ```AWS::AutoScaling::LaunchConfiguration``` or add in ```AWS::EC2::SpotFleet``` support.  To fully use Hibernation with Spot instances, please review [Spot Instance Interruptions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html).
+
+## Platform Documentation
+
+### Service Discovery
+
+Service Discovery is implemented using AWS CloudMap. For each platform deployed there is a service discovery namespace provisioned where the apps register themselves as they come online. These should be discoverable by all the services in the platform by DNS using the service name plus the cluster namespace.
+
+For example a service with the name MyApp1 would be discoverable by other services in the cluster by querying myapp1.gureume-platform.local.
+
+### ECS
+
+ECS is running in Fargate mode.
+
+### Backing Services
+
+Currently the only supported backing service is S3. When you create an S3 service it is not bound to any application.
+To bind an application update the service bindings property and specify a comma-separated list of the applications you want to add permissions for.
+Using the CLI it would look something lie,
+
+```bash
+gureume service update MyS3 --service-bindings app1,app2
+```
+
+This will automatically modify the bucket policy to give read/write access to the IAM Role that the applications are running as.
