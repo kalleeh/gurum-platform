@@ -68,6 +68,10 @@ Resources:
           Subnets:
             - !ImportValue PrivateSubnet1
             - !ImportValue PrivateSubnet2
+      ServiceRegistries:
+        -
+          Port: 80
+          RegistryArn: !GetAtt ServiceDiscoveryService.Arn
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition

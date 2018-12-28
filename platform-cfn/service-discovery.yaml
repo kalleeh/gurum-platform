@@ -23,14 +23,14 @@ Resources:
 
 Outputs:
 
-    NamespaceId:
-        Description: Service Discovery Namespace ID
-        Value: !GetAtt Namespace.Id
-        Export:
-          Name: NamespaceId
-
     NamespaceName:
         Description: Service Discovery Namespace Name
         Value: !Ref NamespaceName
         Export:
           Name: NamespaceName
+
+    NamespaceId:
+        Description: Service Discovery Namespace ID
+        Value: !GetAtt Namespace.Id
+        Export:
+          Name: NamespaceId
