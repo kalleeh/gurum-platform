@@ -83,7 +83,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      ExecutionRoleArn: !GetAtt ApplicationContainerRole.Arn
+      TaskRoleArn: !GetAtt ApplicationContainerRole.Arn
+      ExecutionRoleArn: !GetAtt ApplicationExecutionRole.Arn
       ContainerDefinitions:
         - Name: web
           Essential: true
@@ -173,13 +174,28 @@ Resources:
       Name: 
         Ref: AWS::StackName
 
+  # IAM Role that the container tasks assume to gain access to AWS Services such as S3 etc.
   ApplicationContainerRole:
     Type: "AWS::IAM::Role"
     Properties:
       RoleName: !Sub 'platform-role-${AWS::StackName}'
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      AssumeRolePolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+  
+  # Execution role for EC2 to assume to pull images and write to CloudWatch Logs
+  ApplicationExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub 'platform-execution-role-${AWS::StackName}'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       AssumeRolePolicyDocument:
         Version: "2008-10-17"
         Statement:
