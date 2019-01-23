@@ -37,7 +37,7 @@ Resources:
             Action: s3:PutObject
             Resource: !Sub arn:${AWS::Partition}:s3:::${S3Bucket}/*
             Condition:
-              ForAnyValue:StringNotEquals:
+              StringNotEquals:
                 s3:x-amz-server-side-encryption:
                   - AES256
                   - aws:kms
