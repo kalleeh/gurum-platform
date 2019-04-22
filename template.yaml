@@ -14,11 +14,20 @@ Description: >
     with the necessary exports for the Gureume Management API to integrate
     correctly.
 
-    Last Modified: 9th October 2018
     Modified By: Karl Wallbom <wallbomk@amazon.com>
     Author: Paul Maddox <pmaddox@amazon.com>
 
 Parameters:
+
+    DomainName:
+        Description: Base-domain name for applications running in the platform.
+        Type: String
+        Default: "apps.gureu.me"
+
+    ServiceDiscoveryDomainName:
+        Description: Local service discovery DNS.
+        Type: String
+        Default: "gureume.local"
 
     # Defines if the template should create EC2 instances in the ECS cluster.
     # Leave this at 0 if you plan to only use Fargate.
@@ -51,6 +60,7 @@ Resources:
         Properties:
             TemplateURL: platform-cfn/load-balancers.yaml
             Parameters:
+                DomainName: !Ref DomainName
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
                 Subnets: !GetAtt VPC.Outputs.PublicSubnets
@@ -81,5 +91,5 @@ Resources:
         Properties:
             TemplateURL: platform-cfn/service-discovery.yaml
             Parameters:
-                NamespaceName: !Join ['', [!GetAtt ECS.Outputs.Cluster, '.local']]
+                NamespaceName: !Ref ServiceDiscoveryDomainName
                 VPC: !GetAtt VPC.Outputs.VPC

@@ -120,7 +120,7 @@ Resources:
       GroupName: !Sub 'platform-sg-${AWS::StackName}'
       GroupDescription: !Sub '(${AWS::StackName}) Application Service SG'
       SecurityGroupIngress:
-        - CidrIp: "0.0.0.0/0"
+        - SourceSecurityGroupId: !ImportValue LoadBalancerSecurityGroup
           FromPort: 80
           ToPort: 80
           IpProtocol: tcp
