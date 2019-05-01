@@ -283,9 +283,6 @@ Resources:
 Outputs:
   PipelineName:
     Value: !Sub ${Pipeline}
-  
-  PipelineUrl:
-    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
 
   ServiceDev:
     Value: !Ref ServiceDev
