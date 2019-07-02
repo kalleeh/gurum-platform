@@ -34,16 +34,14 @@ Parameters:
   DockerImage:
     Description: Docker image to start the container with
     Type: String
-    Default: nginx:latest
 
   GroupName:
     Type: String
     Description: The prefix to be added to resources to manage IAM Role permissions
 
-  HostedZoneName:
+  PlatformDomainName:
     Description: Name of the Hosted Zone to register service with
     Type: String
-    Default: apps.gureu.me
 
   ServiceDiscoveryTTL:
     Type: String
@@ -154,7 +152,7 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+            - !Join ['', [!Ref 'AWS::StackName', ., !Ref 'PlatformDomainName']]
       Actions:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
@@ -162,9 +160,9 @@ Resources:
   ServiceDNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Join ['', [!Ref 'HostedZoneName', .]]
+      HostedZoneName: !Join ['', [!Ref 'PlatformDomainName', .]]
       Comment: !Sub 'DNS Record for ${AWS::StackName}'
-      Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+      Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'PlatformDomainName']]
       Type: A
       AliasTarget:
         HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
@@ -215,7 +213,7 @@ Resources:
 
 Outputs:
   Endpoint:
-    Value: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
+    Value: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'PlatformDomainName']]
 
   ServiceRole:
     Value: !GetAtt ApplicationContainerRole.Arn

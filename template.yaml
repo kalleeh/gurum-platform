@@ -19,10 +19,9 @@ Description: >
 
 Parameters:
 
-    DomainName:
+    PlatformDomainName:
         Description: Base-domain name for applications running in the platform.
         Type: String
-        Default: "apps.gureu.me"
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
@@ -93,3 +92,17 @@ Resources:
             Parameters:
                 NamespaceName: !Ref ServiceDiscoveryDomainName
                 VPC: !GetAtt VPC.Outputs.VPC
+
+Outputs:
+
+    PlatformDomainName:
+        Description: Base-domain name for applications running in the platform.
+        Value: !Ref PlatformDomainName
+        Export:
+          Name: PlatformDomainName
+
+    ServiceDiscoveryDomainName:
+        Description: Local service discovery DNS.
+        Value: !Ref ServiceDiscoveryDomainName
+        Export:
+          Name: ServiceDiscoveryDomainName
