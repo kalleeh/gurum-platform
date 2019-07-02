@@ -114,7 +114,7 @@ VPC:
 
 ### Update an ECS service to a new Docker image version
 
-The platform users handle the definition of the container image they want to use, howver you can override certain properties in the app.yaml files being deployed by the platform.
+The platform users handle the definition of the container image they want to use, however you can override certain properties in the app.yaml files being deployed by the platform.
 
 To adjust the rollout parameters (min/max number of tasks/containers to keep in service at any time), you need to configure `DeploymentConfiguration` for the ECS service.
 
