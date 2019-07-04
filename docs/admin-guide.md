@@ -1,8 +1,6 @@
 # Admin Guide
 
-## Installationatta
-
-## Customization
+## Manual Installation
 
 ### Centralized Container Logging
 
@@ -79,3 +77,11 @@ VPC:
         PrivateSubnet1CIDR: 10.180.24.0/21
         PrivateSubnet2CIDR: 10.180.32.0/21
 ```
+
+### Use the SSM Run Command function to see details in the ECS instances
+
+The AWS SSM Run Command function, in the EC2 console, can be used to execute commands at the shell on the ECS instances. These can be helpful for examining the installed configuration of the instances without requiring direct access to them.
+
+### Spot Instances and the Hibernate Agent
+
+In order to use Spot with this template, you will need to enable ```SpotPrice``` under the ```AWS::AutoScaling::LaunchConfiguration``` or add in ```AWS::EC2::SpotFleet``` support.  To fully use Hibernation with Spot instances, please review [Spot Instance Interruptions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html).
