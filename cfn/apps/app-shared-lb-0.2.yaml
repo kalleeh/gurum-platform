@@ -37,6 +37,11 @@ Parameters:
     Description: Platform Load Balancer Hosted Zone ID
     Default: /gureume/platform/loadbalancer/hosted-zone-id
 
+  PlatformNamespaceId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Namespace ID
+    Default: /gureume/platform/service-discovery/namespace-id
+
   DesiredCount:
     Description: How many instances of this task should we run across our cluster?
     Type: Number
@@ -197,7 +202,7 @@ Resources:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       DnsConfig: 
-        NamespaceId: !ImportValue NamespaceId
+        NamespaceId: !Ref PlatformNamespaceId
         DnsRecords:
         - Type: SRV
           TTL: !Ref ServiceDiscoveryTTL
