@@ -12,6 +12,36 @@ Description: Platform App on Shared Load Balancer
 
 Parameters:
 
+  PlatformVPC:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform VPC
+    Default: /gureume/platform/vpc
+
+  PlatformPrivateSubnets:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Description: Platform Private Subnets
+    Default: /gureume/platform/subnets/private
+
+  PlatformCluster:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform ECS Cluster
+    Default: /gureume/platform/ecs
+
+  PlatformLoadBalancerDnsName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Load Balancer DNS Name
+    Default: /gureume/platform/loadbalancer/dns-name
+
+  PlatformLoadBalancerHostedZoneId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Load Balancer Hosted Zone ID
+    Default: /gureume/platform/loadbalancer/hosted-zone-id
+
+  PlatformNamespaceId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Namespace ID
+    Default: /gureume/platform/service-discovery/namespace-id
+
   DesiredCount:
     Description: How many instances of this task should we run across our cluster?
     Type: Number
@@ -58,7 +88,7 @@ Resources:
     Properties:
       ServiceName:
         Ref: AWS::StackName
-      Cluster: !ImportValue Cluster
+      Cluster: !Ref PlatformCluster
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 50
@@ -74,9 +104,7 @@ Resources:
           AssignPublicIp: DISABLED
           SecurityGroups:
             - !GetAtt ApplicationServiceSecurityGroup.GroupId
-          Subnets:
-            - !ImportValue PrivateSubnet1
-            - !ImportValue PrivateSubnet2
+          Subnets: !Ref PlatformPrivateSubnets
       ServiceRegistries:
         -
           Port: 80
@@ -124,7 +152,7 @@ Resources:
           FromPort: 80
           ToPort: 80
           IpProtocol: tcp
-      VpcId: !ImportValue VPC
+      VpcId: !Ref PlatformVPC
 
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -134,7 +162,7 @@ Resources:
       TargetType: ip
       Port: 80
       Protocol: HTTP
-      VpcId: !ImportValue VPC
+      VpcId: !Ref PlatformVPC
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: "50"
@@ -167,14 +195,14 @@ Resources:
       Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
       Type: A
       AliasTarget:
-        HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
-        DNSName: !ImportValue LoadBalancerDNSName
+        HostedZoneId: !Ref PlatformLoadBalancerHostedZoneId
+        DNSName: !Ref PlatformLoadBalancerDnsName
   
   ServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       DnsConfig: 
-        NamespaceId: !ImportValue NamespaceId
+        NamespaceId: !Ref PlatformNamespaceId
         DnsRecords:
         - Type: SRV
           TTL: !Ref ServiceDiscoveryTTL

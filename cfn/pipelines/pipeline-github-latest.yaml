@@ -35,6 +35,11 @@ Parameters:
   ServiceProd:
     Type: String
 
+  PlatformCluster:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform ECS Cluster
+    Default: /gureume/platform/ecs
+
 Conditions:
   DevStageExist: !Not [!Equals ["", !Ref ServiceDev ]]
   TestStageExist: !Not [!Equals ["", !Ref ServiceTest ]]
@@ -213,7 +218,7 @@ Resources:
                   Version: "1"
                   Provider: ECS
                 Configuration:
-                  ClusterName: !ImportValue Cluster
+                  ClusterName: !Ref PlatformCluster
                   ServiceName: !Ref ServiceDev
                   FileName: images.json
                 InputArtifacts:
@@ -231,7 +236,7 @@ Resources:
                   Version: "1"
                   Provider: ECS
                 Configuration:
-                  ClusterName: !ImportValue Cluster
+                  ClusterName: !Ref PlatformCluster
                   ServiceName: !Ref ServiceTest
                   FileName: images.json
                 InputArtifacts:
@@ -258,7 +263,7 @@ Resources:
                 Version: "1"
                 Provider: ECS
               Configuration:
-                ClusterName: !ImportValue Cluster
+                ClusterName: !Ref PlatformCluster
                 ServiceName: !Ref ServiceProd
                 FileName: images.json
               InputArtifacts:

@@ -59,7 +59,7 @@ Resources:
         Properties:
             TemplateURL: platform-cfn/load-balancers.yaml
             Parameters:
-                DomainName: !Ref DomainName
+                DomainName: !Ref PlatformDomainName
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
                 Subnets: !GetAtt VPC.Outputs.PublicSubnets

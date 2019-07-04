@@ -30,6 +30,17 @@ Resources:
       Vpc: !Ref VPC
       Name: !Ref NamespaceName
 
+  ############################
+  #      SSM Parameters      #
+  ############################
+  NameSpaceParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /gureume/platform/service-discovery/namespace-id
+      Type: String
+      Value: !GetAtt Namespace.Id
+      Description: Gureume Platform Namespace ID.
+
 Outputs:
 
     NamespaceName:
