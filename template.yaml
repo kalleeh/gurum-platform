@@ -22,6 +22,7 @@ Parameters:
     PlatformDomainName:
         Description: Base-domain name for applications running in the platform.
         Type: String
+        Default: "apps.gureu.me"
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
@@ -59,7 +60,7 @@ Resources:
         Properties:
             TemplateURL: platform-cfn/load-balancers.yaml
             Parameters:
-                DomainName: !Ref DomainName
+                DomainName: !Ref PlatformDomainName
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
                 Subnets: !GetAtt VPC.Outputs.PublicSubnets
