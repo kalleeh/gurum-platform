@@ -36,8 +36,7 @@ The ECS instances should also appear in the Managed Instances section of the EC2
 
 ## Deployment Instructions (Quick Start)
 
-Create an S3 bucket to hold your deployment artifacts and update the deploy.sh script accordingly.
-Then run the below command to package all the deployment artifacts, upload them to the S3 bucket and create the CloudFormation stacks.
+Run the below command to package all the deployment artifacts, upload them to the S3 bucket and create the CloudFormation stacks.
 
 ```sh
 chmod +x deploy.sh
