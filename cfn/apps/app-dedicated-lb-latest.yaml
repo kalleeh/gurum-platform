@@ -13,19 +13,24 @@ Description: Platform Service with Dedicated Load Balancer
 Parameters:
 
   PlatformVPC:
-    Type : 'AWS::SSM::Parameter::Value<String>'
+    Type: AWS::SSM::Parameter::Value<String>
     Description: Platform VPC
     Default: /gureume/platform/vpc
 
   PlatformPublicSubnets:
-    Type : 'AWS::SSM::Parameter::Value<List<String>>'
+    Type: AWS::SSM::Parameter::Value<List<String>>
     Description: Platform Public Subnets
     Default: /gureume/platform/subnets/public
 
   PlatformPrivateSubnets:
-    Type : 'AWS::SSM::Parameter::Value<List<String>>'
+    Type: AWS::SSM::Parameter::Value<List<String>>
     Description: Platform Private Subnets
     Default: /gureume/platform/subnets/private
+
+  PlatformCluster:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform ECS Cluster
+    Default: /gureume/platform/ecs
 
   DesiredCount:
     Description: How many instances of this task should we run across our cluster?
@@ -60,7 +65,7 @@ Resources:
     Properties:
       ServiceName:
         Ref: AWS::StackName
-      Cluster: !ImportValue Cluster
+      Cluster: !Ref PlatformCluster
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 50
