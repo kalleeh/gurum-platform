@@ -27,6 +27,16 @@ Parameters:
     Description: Platform ECS Cluster
     Default: /gureume/platform/ecs
 
+  PlatformLoadBalancerDnsName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Load Balancer DNS Name
+    Default: /gureume/platform/loadbalancer/dns-name
+
+  PlatformLoadBalancerHostedZoneId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Platform Load Balancer Hosted Zone ID
+    Default: /gureume/platform/loadbalancer/hosted-zone-id
+
   DesiredCount:
     Description: How many instances of this task should we run across our cluster?
     Type: Number
@@ -180,8 +190,8 @@ Resources:
       Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'HostedZoneName']]
       Type: A
       AliasTarget:
-        HostedZoneId: !ImportValue LoadBalancerCanonicalHostedZoneID
-        DNSName: !ImportValue LoadBalancerDNSName
+        HostedZoneId: !Ref PlatformLoadBalancerHostedZoneId
+        DNSName: !Ref PlatformLoadBalancerDnsName
   
   ServiceDiscoveryService:
     Type: AWS::ServiceDiscovery::Service
