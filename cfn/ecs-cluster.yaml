@@ -367,6 +367,19 @@ Resources:
                       Effect: Allow
                       Resource: "*"
 
+    ############################
+    #      SSM Parameters      #
+    ############################
+    ClusterParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/ecs"
+            Type: "String"
+            Value: !Ref ECSCluster
+            Description: "Gureume Platform ECS Cluster."
+            Tags:
+                "Environment": !Ref EnvironmentName
+
 Outputs:
 
     Cluster:

@@ -107,6 +107,39 @@ Resources:
             Port: 443
             Protocol: HTTP
 
+    ############################
+    #      SSM Parameters      #
+    ############################
+    LoadBalancerDNSNameParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/dns-name"
+            Type: "String"
+            Value: !GetAtt LoadBalancer.DNSName
+            Description: "Gureume Platform Load Balancer DNS Name."
+            Tags:
+                "Environment": !Ref EnvironmentName
+
+    LoadBalancerHostedZoneIdParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/hosted-zone-id"
+            Type: "String"
+            Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+            Description: "Gureume Platform Load Balancer Hosted Zone ID."
+            Tags:
+                "Environment": !Ref EnvironmentName
+
+    LoadBalancerSecurityGroupParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/security-group"
+            Type: "String"
+            Value: !Ref LoadBalancerSecurityGroup
+            Description: "Gureume Platform Load Balancer Security Group."
+            Tags:
+                "Environment": !Ref EnvironmentName
+
 Outputs:
 
     LoadBalancer:

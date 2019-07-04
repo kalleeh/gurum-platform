@@ -30,13 +30,67 @@ The templates below are included in this repository and reference architecture:
 | [platform-cfn/ecs-cluster.yaml](infrastructure/ecs-cluster.yaml) | This template deploys an ECS cluster to the private subnets using an Auto Scaling group and installs the AWS SSM agent with related policy requirements. |
 | [platform-cfn/lifecyclehook.yaml](infrastructure/lifecyclehook.yaml) | This template deploys a Lambda Function and Auto Scaling Lifecycle Hook to drain Tasks from your Container Instances when an Instance is selected for Termination in your Auto Scaling Group.
 
-After the CloudFormation templates have been deployed, the [stack outputs](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) contain a
+After the CloudFormation templates have been deployed, the [stack outputs](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) contain a series of parameters needed for configuration of the API and the CLI.
 
 The ECS instances should also appear in the Managed Instances section of the EC2 console.
 
-## Deployment Instructions
+## Deployment Instructions (Quick Start)
 
-### Setup centralized container logging
+
+### Update an ECS service parameters
+
+The platform users handle the definition of the container image they want to use, however you can override certain properties in the app.yaml files being deployed by the platform.
+
+To adjust the rollout parameters (min/max number of tasks/containers to keep in service at any time), you need to configure `DeploymentConfiguration` for the ECS service.
+
+For example:
+
+``` YAML
+Service:
+  Type: AWS::ECS::Service
+    Properties:
+      ...
+      DesiredCount: 4
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+```
+
+### Use the SSM Run Command function to see details in the ECS instances
+
+The AWS SSM Run Command function, in the EC2 console, can be used to execute commands at the shell on the ECS instances. These can be helpful for examining the installed configuration of the instances without requiring direct access to them.
+
+### Spot Instances and the Hibernate Agent
+
+In order to use Spot with this template, you will need to enable ```SpotPrice``` under the ```AWS::AutoScaling::LaunchConfiguration``` or add in ```AWS::EC2::SpotFleet``` support.  To fully use Hibernation with Spot instances, please review [Spot Instance Interruptions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html).
+
+## Platform Documentation
+
+### Service Discovery
+
+Service Discovery is implemented using AWS CloudMap. For each platform deployed there is a service discovery namespace provisioned where the apps register themselves as they come online. These should be discoverable by all the services in the platform by DNS using the service name plus the cluster namespace.
+
+For example a service with the name MyApp1 would be discoverable by other services in the cluster by querying myapp1.gureume-platform.local.
+
+### ECS
+
+ECS is running in Fargate mode.
+
+### Backing Services
+
+Currently the only supported backing service is S3. When you create an S3 service it is not bound to any application.
+To bind an application update the service bindings property and specify a comma-separated list of the applications you want to add permissions for.
+Using the CLI it would look something lie,
+
+```bash
+gureume service update MyS3 --service-bindings app1,app2
+```
+
+This will automatically modify the bucket policy to give read/write access to the IAM Role that the applications are running as.
+
+## Customized Installation (Advanced)
+
+### Custom centralized container logging
 
 By default, the containers in your ECS tasks/services are already configured to send log information to CloudWatch Logs and retain them for 365 days. Within each service's template (in [cfn/apps/*](cfn/apps/)), a LogGroup is created that is named after the CloudFormation stack. All container logs are sent to that CloudWatch Logs log group.
 
@@ -48,7 +102,7 @@ For more information, see the [LogConfiguration](http://docs.aws.amazon.com/Amaz
 
 > Note: Changing the log driver means that you will need to handle authorization to log groups outside of the container platform. (or simply accept that users can view each others logs)
 
-### Change the ECS host instance type
+### Change the default ECS host instance type
 
 > Note: This only applies if you are not deploying using ECS Fargate
 
@@ -111,54 +165,3 @@ VPC:
         PrivateSubnet1CIDR: 10.180.24.0/21
         PrivateSubnet2CIDR: 10.180.32.0/21
 ```
-
-### Update an ECS service to a new Docker image version
-
-The platform users handle the definition of the container image they want to use, however you can override certain properties in the app.yaml files being deployed by the platform.
-
-To adjust the rollout parameters (min/max number of tasks/containers to keep in service at any time), you need to configure `DeploymentConfiguration` for the ECS service.
-
-For example:
-
-``` YAML
-Service:
-  Type: AWS::ECS::Service
-    Properties:
-      ...
-      DesiredCount: 4
-      DeploymentConfiguration:
-        MaximumPercent: 200
-        MinimumHealthyPercent: 50
-```
-
-### Use the SSM Run Command function to see details in the ECS instances
-
-The AWS SSM Run Command function, in the EC2 console, can be used to execute commands at the shell on the ECS instances. These can be helpful for examining the installed configuration of the instances without requiring direct access to them.
-
-### Spot Instances and the Hibernate Agent
-
-In order to use Spot with this template, you will need to enable ```SpotPrice``` under the ```AWS::AutoScaling::LaunchConfiguration``` or add in ```AWS::EC2::SpotFleet``` support.  To fully use Hibernation with Spot instances, please review [Spot Instance Interruptions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html).
-
-## Platform Documentation
-
-### Service Discovery
-
-Service Discovery is implemented using AWS CloudMap. For each platform deployed there is a service discovery namespace provisioned where the apps register themselves as they come online. These should be discoverable by all the services in the platform by DNS using the service name plus the cluster namespace.
-
-For example a service with the name MyApp1 would be discoverable by other services in the cluster by querying myapp1.gureume-platform.local.
-
-### ECS
-
-ECS is running in Fargate mode.
-
-### Backing Services
-
-Currently the only supported backing service is S3. When you create an S3 service it is not bound to any application.
-To bind an application update the service bindings property and specify a comma-separated list of the applications you want to add permissions for.
-Using the CLI it would look something lie,
-
-```bash
-gureume service update MyS3 --service-bindings app1,app2
-```
-
-This will automatically modify the bucket policy to give read/write access to the IAM Role that the applications are running as.
