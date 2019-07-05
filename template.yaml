@@ -20,9 +20,9 @@ Description: >
 Parameters:
 
     PlatformDomainName:
-        Type: AWS::SSM::Parameter::Value<String>
-        Description: Gureume Platform Domain FQDN
-        Default: /gureume/platform/domainname
+        Description: Base-domain name for applications running in the platform.
+        Type: String
+        Default: "apps.gureu.me"
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
@@ -46,7 +46,7 @@ Resources:
     VPC:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: cfn/vpc.yaml
+            TemplateURL: platform-cfn/vpc.yaml
             Parameters:
                 EnvironmentName:    !Ref AWS::StackName
                 VpcCIDR:            10.180.0.0/16
@@ -58,7 +58,7 @@ Resources:
     ALB:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: cfn/load-balancers.yaml
+            TemplateURL: platform-cfn/load-balancers.yaml
             Parameters:
                 DomainName: !Ref PlatformDomainName
                 EnvironmentName: !Ref AWS::StackName
@@ -68,7 +68,7 @@ Resources:
     ECS:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: cfn/ecs-cluster.yaml
+            TemplateURL: platform-cfn/ecs-cluster.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.small
@@ -81,7 +81,7 @@ Resources:
         Type: AWS::CloudFormation::Stack
         Condition: ASGExists
         Properties:
-            TemplateURL: cfn/lifecyclehook.yaml
+            TemplateURL: platform-cfn/lifecyclehook.yaml
             Parameters:
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 ECSAutoScalingGroupName: !GetAtt ECS.Outputs.ECSAutoScalingGroupName
@@ -89,12 +89,18 @@ Resources:
     ServiceDiscovery:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: cfn/service-discovery.yaml
+            TemplateURL: platform-cfn/service-discovery.yaml
             Parameters:
                 NamespaceName: !Ref ServiceDiscoveryDomainName
                 VPC: !GetAtt VPC.Outputs.VPC
 
 Outputs:
+
+    PlatformDomainName:
+        Description: Base-domain name for applications running in the platform.
+        Value: !Ref PlatformDomainName
+        Export:
+          Name: PlatformDomainName
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
