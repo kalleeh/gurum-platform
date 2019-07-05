@@ -8,7 +8,7 @@
 # Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.
 
 AWSTemplateFormatVersion: "2010-09-09"
-Description: tests String macro functions
+Description: String macro functions
 Parameters:
   Tags:
     Default: "Env=Prod,Application=MyApp,BU=ModernisationTeam"
