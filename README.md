@@ -36,10 +36,19 @@ The ECS instances should also appear in the Managed Instances section of the EC2
 
 ## Deployment Instructions (Quick Start)
 
+### Prerequisites
+
+#### Platform Domain Name
+
+As part of the deployment the template will create a wildcard certificate using AWS Certificate Manager. This domain name will then be used to host your platform applications by registering a Route 53 record in the Hosted Zone.
+The deployment of the Route 53 Hosted Zone is not part of this stack since it's likely you already have one or want to manage it outside the lifecycle of this platform. You are likely to want a Public Hosted Zone to be accessible from outside of your AWS Account, you can read more about how to provision one in the [documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
+
+#### Setup commands
+
 Run the below command to package all the deployment artifacts, upload them to the S3 bucket and create the CloudFormation stacks.
+If you run it for the first time you will be asked about a FQDN for the wildcart ceriticate. Enter the domain name configured as above.
 
 ```sh
-chmod +x deploy.sh
 ./deploy.sh
 ```
 
