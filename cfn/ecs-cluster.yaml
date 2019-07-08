@@ -367,38 +367,8 @@ Resources:
                       Effect: Allow
                       Resource: "*"
 
-    ############################
-    #      SSM Parameters      #
-    ############################
-    ClusterParam:
-        Type: "AWS::SSM::Parameter"
-        Properties:
-            Name: "/gureume/platform/ecs"
-            Type: "String"
-            Value: !Ref ECSCluster
-            Description: "Gureume Platform ECS Cluster."
-            Tags:
-                "Environment": !Ref EnvironmentName
-
 Outputs:
 
-    Cluster:
+    ECSCluster:
         Description: A reference to the ECS cluster
         Value: !Ref ECSCluster
-        Export:
-          Name: Cluster
-
-    ECSServiceAutoScalingRole:
-        Condition: CreateEC2s
-        Description: A reference to ECS service auto scaling role
-        Value: !GetAtt ECSServiceAutoScalingRole.Arn
-
-    ECSAutoScalingGroupName:
-        Condition: CreateEC2s
-        Description: A reference to ECS AutoScaling Group Name
-        Value: !Ref ECSAutoScalingGroup
-
-    ECSHostSecurityGroup:
-        Condition: CreateEC2s
-        Description: A reference to the security group for ECS hosts
-        Value: !Ref ECSHostSecurityGroup

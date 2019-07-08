@@ -22,7 +22,7 @@ Parameters:
     PlatformDomainName:
         Type: AWS::SSM::Parameter::Value<String>
         Description: Gureume Platform Domain FQDN
-        Default: /gureume/platform/domainname
+        Default: /gureume/platform/domain-name
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
@@ -94,10 +94,104 @@ Resources:
                 NamespaceName: !Ref ServiceDiscoveryDomainName
                 VPC: !GetAtt VPC.Outputs.VPC
 
-Outputs:
+    ############################
+    #      SSM Parameters      #
+    ############################
 
-    ServiceDiscoveryDomainName:
-        Description: Local service discovery DNS.
-        Value: !Ref ServiceDiscoveryDomainName
-        Export:
-          Name: ServiceDiscoveryDomainName
+    VPCParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/vpc"
+            Type: "String"
+            Value: !GetAtt VPC.Outputs.VPC
+            Description: "Gureume Platform VPC ID."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    PublicSubnetsParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/subnets/public"
+            Type: "StringList"
+            Value: !GetAtt VPC.Outputs.PublicSubnets
+            Description: "Gureume Platform Public Subnets."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    PrivateSubnetsParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/subnets/private"
+            Type: "StringList"
+            Value: !GetAtt VPC.Outputs.PrivateSubnets
+            Description: "Gureume Platform Private Subnets."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    ServiceDiscoveryNamespaceParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/service-discovery/namespace"
+            Type: "String"
+            Value: !Ref ServiceDiscoveryDomainName
+            Description: "Gureume Platform Service Discovery Namespace."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    NamespaceParam:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: /gureume/platform/service-discovery/namespace-id
+            Type: String
+            Value: !GetAtt ServiceDiscovery.Outputs.NamespaceId
+            Description: Gureume Platform Namespace ID.
+
+    LoadBalancerDNSNameParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/dns-name"
+            Type: "String"
+            Value: !GetAtt ALB.Outputs.LoadBalancerDNSName
+            Description: "Gureume Platform Load Balancer DNS Name."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    LoadBalancerHostedZoneIdParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/hosted-zone-id"
+            Type: "String"
+            Value: !GetAtt ALB.Outputs.LoadBalancerCanonicalHostedZoneID
+            Description: "Gureume Platform Load Balancer Hosted Zone ID."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    LoadBalancerListenerArnParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/listener-arn"
+            Type: "String"
+            Value: !GetAtt ALB.Outputs.LoadBalancerListener
+            Description: "Gureume Platform Load Balancer Listener ARN."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    LoadBalancerSecurityGroupParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/loadbalancer/security-group"
+            Type: "String"
+            Value: !GetAtt ALB.Outputs.LoadBalancerSecurityGroup
+            Description: "Gureume Platform Load Balancer Security Group."
+            Tags:
+                "Environment": !Ref AWS::StackName
+
+    ECSClusterParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gureume/platform/ecs"
+            Type: "String"
+            Value: !GetAtt ECS.Outputs.ECSCluster
+            Description: "Gureume Platform ECS Cluster."
+            Tags:
+                "Environment": !Ref AWS::StackName
