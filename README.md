@@ -46,7 +46,7 @@ The deployment of the Route 53 Hosted Zone is not part of this stack since it's 
 #### Setup commands
 
 Run the below command to package all the deployment artifacts, upload them to the S3 bucket and create the CloudFormation stacks.
-If you run it for the first time you will be asked about a FQDN for the wildcart ceriticate. Enter the domain name configured as above.
+If you run it for the first time you will be asked about a FQDN for the wildcard ceriticate. Enter the domain name configured as above.
 
 ```sh
 ./deploy.sh
