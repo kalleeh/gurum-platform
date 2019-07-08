@@ -11,11 +11,11 @@ if aws s3 ls "s3://$S3_BUCKET" 2>&1 | grep -q 'NoSuchBucket'; then
 fi
 
 # Only configure public hosted zone if it's not already configured
-if ! aws ssm get-parameters --names "/gureume/platform/domainname" 2>&1 | grep -q '"Name": "/gureume/platform/domainname"'; then
+if ! aws ssm get-parameters --names "/gureume/platform/domain-name" 2>&1 | grep -q '"Name": "/gureume/platform/domain-name"'; then
     echo "No Platform Doman Name specified. Enter FQDN for wildcard cert i.e. (apps.example.com):"
     read PLATFORM_DOMAIN_NAME
     aws ssm put-parameter \
-        --name "/gureume/platform/domainname" \
+        --name "/gureume/platform/domain-name" \
         --type "String" \
         --description "Gureume Platform Domain FQDN." \
         --value $PLATFORM_DOMAIN_NAME
