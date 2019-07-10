@@ -105,8 +105,6 @@ Resources:
             Type: "String"
             Value: !GetAtt VPC.Outputs.VPC
             Description: "Gureume Platform VPC ID."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     PublicSubnetsParam:
         Type: "AWS::SSM::Parameter"
@@ -115,8 +113,6 @@ Resources:
             Type: "StringList"
             Value: !GetAtt VPC.Outputs.PublicSubnets
             Description: "Gureume Platform Public Subnets."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     PrivateSubnetsParam:
         Type: "AWS::SSM::Parameter"
@@ -125,8 +121,6 @@ Resources:
             Type: "StringList"
             Value: !GetAtt VPC.Outputs.PrivateSubnets
             Description: "Gureume Platform Private Subnets."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     ServiceDiscoveryNamespaceParam:
         Type: "AWS::SSM::Parameter"
@@ -135,8 +129,6 @@ Resources:
             Type: "String"
             Value: !Ref ServiceDiscoveryDomainName
             Description: "Gureume Platform Service Discovery Namespace."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     NamespaceParam:
         Type: AWS::SSM::Parameter
@@ -153,8 +145,6 @@ Resources:
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerDNSName
             Description: "Gureume Platform Load Balancer DNS Name."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     LoadBalancerHostedZoneIdParam:
         Type: "AWS::SSM::Parameter"
@@ -163,8 +153,6 @@ Resources:
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerCanonicalHostedZoneID
             Description: "Gureume Platform Load Balancer Hosted Zone ID."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     LoadBalancerListenerArnParam:
         Type: "AWS::SSM::Parameter"
@@ -173,8 +161,6 @@ Resources:
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerListener
             Description: "Gureume Platform Load Balancer Listener ARN."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     LoadBalancerSecurityGroupParam:
         Type: "AWS::SSM::Parameter"
@@ -183,8 +169,6 @@ Resources:
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerSecurityGroup
             Description: "Gureume Platform Load Balancer Security Group."
-            Tags:
-                "Environment": !Ref AWS::StackName
 
     ECSClusterParam:
         Type: "AWS::SSM::Parameter"
@@ -193,5 +177,3 @@ Resources:
             Type: "String"
             Value: !GetAtt ECS.Outputs.ECSCluster
             Description: "Gureume Platform ECS Cluster."
-            Tags:
-                "Environment": !Ref AWS::StackName
