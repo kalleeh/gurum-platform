@@ -1,6 +1,6 @@
-# Gureume Platform Template
+# Gurum Platform Template
 
-This reference architecture provides a set of YAML templates for deploying a container cluster and supporting functionality to the Gureume Management API with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
+This reference architecture provides a set of YAML templates for deploying a container cluster and supporting functionality to the Gurum Management API with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 ## Overview
 
@@ -52,7 +52,7 @@ If you run it for the first time you will be asked about a FQDN for the wildcard
 ./deploy.sh
 ```
 
-All the relevant output parameters should be written to parameter store under the /gureume/ namespace.
+All the relevant output parameters should be written to parameter store under the /gurum/ namespace.
 
 ## Manual Deployment Instructions
 
@@ -83,7 +83,7 @@ Service:
 
 Service Discovery is implemented using AWS CloudMap. For each platform deployed there is a service discovery namespace provisioned where the apps register themselves as they come online. These should be discoverable by all the services in the platform by DNS using the service name plus the cluster namespace.
 
-For example a service with the name MyApp1 would be discoverable by other services in the cluster by querying myapp1.gureume-platform.local.
+For example a service with the name MyApp1 would be discoverable by other services in the cluster by querying myapp1.gurum-platform.local.
 
 ### ECS
 
@@ -96,7 +96,7 @@ To bind an application update the service bindings property and specify a comma-
 Using the CLI it would look something lie,
 
 ```bash
-gureume service update MyS3 --service-bindings app1,app2
+gurum service update MyS3 --service-bindings app1,app2
 ```
 
 This will automatically modify the bucket policy to give read/write access to the IAM Role that the applications are running as.
