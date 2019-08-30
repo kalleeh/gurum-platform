@@ -10,8 +10,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
 
-    This template deploys the Gureume Platform Infrastructure together
-    with the necessary exports for the Gureume Management API to integrate
+    This template deploys the Gurum Platform Infrastructure together
+    with the necessary exports for the Gurum Management API to integrate
     correctly.
 
     Modified By: Karl Wallbom <wallbomk@amazon.com>
@@ -21,13 +21,13 @@ Parameters:
 
     PlatformDomainName:
         Type: AWS::SSM::Parameter::Value<String>
-        Description: Gureume Platform Domain FQDN
-        Default: /gureume/platform/domain-name
+        Description: Gurum Platform Domain FQDN
+        Default: /gurum/platform/domain-name
 
     ServiceDiscoveryDomainName:
         Description: Local service discovery DNS.
         Type: String
-        Default: "gureume.local"
+        Default: "gurum.local"
 
     # Defines if the template should create EC2 instances in the ECS cluster.
     # Leave this at 0 if you plan to only use Fargate.
@@ -101,79 +101,79 @@ Resources:
     VPCParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/vpc"
+            Name: "/gurum/platform/vpc"
             Type: "String"
             Value: !GetAtt VPC.Outputs.VPC
-            Description: "Gureume Platform VPC ID."
+            Description: "Gurum Platform VPC ID."
 
     PublicSubnetsParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/subnets/public"
+            Name: "/gurum/platform/subnets/public"
             Type: "StringList"
             Value: !GetAtt VPC.Outputs.PublicSubnets
-            Description: "Gureume Platform Public Subnets."
+            Description: "Gurum Platform Public Subnets."
 
     PrivateSubnetsParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/subnets/private"
+            Name: "/gurum/platform/subnets/private"
             Type: "StringList"
             Value: !GetAtt VPC.Outputs.PrivateSubnets
-            Description: "Gureume Platform Private Subnets."
+            Description: "Gurum Platform Private Subnets."
 
     ServiceDiscoveryNamespaceParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/service-discovery/namespace"
+            Name: "/gurum/platform/service-discovery/namespace"
             Type: "String"
             Value: !Ref ServiceDiscoveryDomainName
-            Description: "Gureume Platform Service Discovery Namespace."
+            Description: "Gurum Platform Service Discovery Namespace."
 
     NamespaceParam:
         Type: AWS::SSM::Parameter
         Properties:
-            Name: /gureume/platform/service-discovery/namespace-id
+            Name: /gurum/platform/service-discovery/namespace-id
             Type: String
             Value: !GetAtt ServiceDiscovery.Outputs.NamespaceId
-            Description: Gureume Platform Namespace ID.
+            Description: Gurum Platform Namespace ID.
 
     LoadBalancerDNSNameParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/loadbalancer/dns-name"
+            Name: "/gurum/platform/loadbalancer/dns-name"
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerDNSName
-            Description: "Gureume Platform Load Balancer DNS Name."
+            Description: "Gurum Platform Load Balancer DNS Name."
 
     LoadBalancerHostedZoneIdParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/loadbalancer/hosted-zone-id"
+            Name: "/gurum/platform/loadbalancer/hosted-zone-id"
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerCanonicalHostedZoneID
-            Description: "Gureume Platform Load Balancer Hosted Zone ID."
+            Description: "Gurum Platform Load Balancer Hosted Zone ID."
 
     LoadBalancerListenerArnParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/loadbalancer/listener-arn"
+            Name: "/gurum/platform/loadbalancer/listener-arn"
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerListener
-            Description: "Gureume Platform Load Balancer Listener ARN."
+            Description: "Gurum Platform Load Balancer Listener ARN."
 
     LoadBalancerSecurityGroupParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/loadbalancer/security-group"
+            Name: "/gurum/platform/loadbalancer/security-group"
             Type: "String"
             Value: !GetAtt ALB.Outputs.LoadBalancerSecurityGroup
-            Description: "Gureume Platform Load Balancer Security Group."
+            Description: "Gurum Platform Load Balancer Security Group."
 
     ECSClusterParam:
         Type: "AWS::SSM::Parameter"
         Properties:
-            Name: "/gureume/platform/ecs"
+            Name: "/gurum/platform/ecs"
             Type: "String"
             Value: !GetAtt ECS.Outputs.ECSCluster
-            Description: "Gureume Platform ECS Cluster."
+            Description: "Gurum Platform ECS Cluster."
