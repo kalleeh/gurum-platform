@@ -138,6 +138,14 @@ Resources:
             Value: !GetAtt ServiceDiscovery.Outputs.NamespaceId
             Description: Gurum Platform Namespace ID.
 
+    PlatformDomainCertificate:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gurum/platform/domain-certificate"
+            Type: "String"
+            Value: !GetAtt ALB.Outputs.LoadBalancerListenerCertificate
+            Description: "Gurum Platform Domain ACM Certificate."
+
     LoadBalancerDNSNameParam:
         Type: "AWS::SSM::Parameter"
         Properties:
