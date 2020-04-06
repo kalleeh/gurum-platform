@@ -182,11 +182,3 @@ Resources:
             Type: "String"
             Value: !GetAtt ECS.Outputs.ECSCluster
             Description: "Gurum Platform ECS Cluster."
-
-    ECSASGParam:
-        Type: "AWS::SSM::Parameter"
-        Properties:
-            Name: "/gurum/platform/ecs-asg"
-            Type: "String"
-            Value: !GetAtt ECS.Outputs.ECSAutoScalingGroup
-            Description: "Name of AutoScaling Group."

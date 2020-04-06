@@ -319,6 +319,15 @@ Resources:
                             Effect: Allow
                             Resource: '*'
 
+    ECSASGParam:
+        Condition: CreateEC2s
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gurum/platform/ecs-asg"
+            Type: "String"
+            Value: !Ref ECSAutoScalingGroup
+            Description: "Name of AutoScaling Group."
+
 Outputs:
 
     ECSCluster:
@@ -328,4 +337,4 @@ Outputs:
     ECSAutoScalingGroup:
         Condition: CreateEC2s
         Description: Name of AutoScaling Group
-        Value: !Ref ECSCluster
+        Value: !Ref ECSAutoScalingGroup
