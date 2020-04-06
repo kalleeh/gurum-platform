@@ -26,9 +26,9 @@ Resources:
   Namespace:
     Type: "AWS::ServiceDiscovery::PrivateDnsNamespace"
     Properties:
-      Description: Service Discovery Namespace for Platform
-      Vpc: !Ref VPC
-      Name: !Ref NamespaceName
+        Description: Service Discovery Namespace for Platform
+        Vpc: !Ref VPC
+        Name: !Ref NamespaceName
 
 Outputs:
 
