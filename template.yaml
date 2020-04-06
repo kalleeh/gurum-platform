@@ -36,6 +36,11 @@ Parameters:
         Type: Number
         Default: 0
 
+    InstanceType:
+        Description: Which instance type should we use to build the ECS cluster?
+        Type: String
+        Default: t3.medium
+
 Conditions:
 
     ASGExists:
@@ -71,7 +76,7 @@ Resources:
             TemplateURL: cfn/ecs-cluster.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
-                InstanceType: t2.small
+                InstanceType: !Ref InstanceType
                 ClusterSize: !Ref ClusterSize
                 VPC: !GetAtt VPC.Outputs.VPC
                 Subnets: !GetAtt VPC.Outputs.PrivateSubnets
