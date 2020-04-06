@@ -16,6 +16,7 @@ Parameters:
   ECSAutoScalingGroupName:
     Type: String
     Description: Name of Auto Scaling Group
+    Default: /gurum/platform/ecs-asg
 
   PlatformCluster:
     Type: AWS::SSM::Parameter::Value<String>

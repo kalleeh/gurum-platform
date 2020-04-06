@@ -82,9 +82,6 @@ Resources:
         Condition: ASGExists
         Properties:
             TemplateURL: cfn/lifecyclehook.yaml
-            Parameters:
-                Cluster: !GetAtt ECS.Outputs.Cluster
-                ECSAutoScalingGroupName: !GetAtt ECS.Outputs.ECSAutoScalingGroupName
 
     ServiceDiscovery:
         Type: AWS::CloudFormation::Stack
@@ -185,3 +182,11 @@ Resources:
             Type: "String"
             Value: !GetAtt ECS.Outputs.ECSCluster
             Description: "Gurum Platform ECS Cluster."
+
+    ECSASGParam:
+        Type: "AWS::SSM::Parameter"
+        Properties:
+            Name: "/gurum/platform/ecs-asg"
+            Type: "String"
+            Value: !GetAtt ECS.Outputs.ECSAutoScalingGroup
+            Description: "Name of AutoScaling Group."
