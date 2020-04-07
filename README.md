@@ -58,6 +58,11 @@ All the relevant output parameters should be written to parameter store under th
 
 For manual steps and customizations to the platform, see the [admin guide](docs/admin-guide.md).
 
+### ECS Auto Scaling
+
+AutoScaling doesn't use the ECS Capacity Provider by default since this is not supported by CloudFormation yet. You need to follow the instructions and create this separately.
+[AWS Documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-cluster-auto-scaling-cli.html)
+
 ### Update an ECS service parameters
 
 The platform users handle the definition of the container image they want to use, however you can override certain properties in the app.yaml files being deployed by the platform.

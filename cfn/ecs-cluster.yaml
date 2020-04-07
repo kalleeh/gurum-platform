@@ -89,86 +89,88 @@ Resources:
           Value: 'This instance is the part of an ECS Auto Scaling group'
           PropagateAtLaunch: true
 
-  # Custom Resource to enable CIS Standards in Security Hub
-  EcsCapacityProvider:
-    Type: Custom::EcsCapacityProvider
-    Condition: CreateEC2s
-    Properties:
-      ServiceToken: !GetAtt CreateEcsCapacityProvider.Arn
-      EnvironmentName: !Ref EnvironmentName
-      AutoScalingGroup: !Ref EcsInstanceAsg
-      TargetCapacity: 80
+  # # Custom Resource to enable CIS Standards in Security Hub
+  # EcsCapacityProvider:
+  #   Type: Custom::EcsCapacityProvider
+  #   Condition: CreateEC2s
+  #   Properties:
+  #     ServiceToken: !GetAtt CreateEcsCapacityProvider.Arn
+  #     EnvironmentName: !Ref EnvironmentName
+  #     AutoScalingGroup: !Ref EcsInstanceAsg
+  #     TargetCapacity: 80
 
-  CreateEcsCapacityProvider:
-    Type: AWS::Serverless::Function
-    Condition: CreateEC2s
-    Properties:
-      Handler: index.handler
-      Runtime: python3.7
-      Policies:
-        - Statement:
-          - Effect: Allow
-            Action:
-              - ecs:CreateCapacityProvider
-              - autoscaling:CreateOrUpdateTags
-              - autoscaling:DescribeAutoScalingGroups
-              - autoscaling:UpdateAutoScalingGroup
-            Resource: "*"
-      InlineCode: |
-        import boto3
-        import cfnresponse
+  # CreateEcsCapacityProvider:
+  #   Type: AWS::Serverless::Function
+  #   Condition: CreateEC2s
+  #   Properties:
+  #     Handler: index.handler
+  #     Runtime: python3.7
+  #     Policies:
+  #       - Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - ecs:CreateCapacityProvider
+  #             - autoscaling:CreateOrUpdateTags
+  #             - autoscaling:DescribeAutoScalingGroups
+  #             - autoscaling:UpdateAutoScalingGroup
+  #           Resource: "*"
+  #     InlineCode: |
+  #       import boto3
+  #       import cfnresponse
 
-        ecs_client = boto3.client("ecs")
-        asg_client = boto3.client("autoscaling")
+  #       ecs_client = boto3.client("ecs")
+  #       asg_client = boto3.client("autoscaling")
 
-        def handler(event, context):
-            responseData = {}
-            physicalResourceId = {}
+  #       def handler(event, context):
+  #           responseData = {}
+  #           physicalResourceId = {}
 
-            if event['RequestType'] == 'Create':
-              environment_name = event['ResourceProperties']['EnvironmentName']
-              asg_name = event['ResourceProperties']['AutoScalingGroup']
-              target_capacity = int(event['ResourceProperties']['TargetCapacity'])
+  #           if event['RequestType'] == 'Create':
+  #             environment_name = event['ResourceProperties']['EnvironmentName']
+  #             asg_name = event['ResourceProperties']['AutoScalingGroup']
+  #             target_capacity = int(event['ResourceProperties']['TargetCapacity'])
 
-              asg = asg_client.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
-              asg_arn = asg['AutoScalingGroups'][0]['AutoScalingGroupARN']
-              cap_provider_name = '{}-capacity-provider'.format(environment_name)
+  #             asg = asg_client.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
+  #             asg_arn = asg['AutoScalingGroups'][0]['AutoScalingGroupARN']
+  #             cap_provider_name = '{}-capacity-provider'.format(environment_name)
 
-              try:
-                response = asg_client.update_auto_scaling_group(
-                    AutoScalingGroupName=asg_name,
-                    NewInstancesProtectedFromScaleIn=True,
-                )
-              except Exception as e:
-                responseData['reason'] = "Cannot create Capacity Provider: " + str(e)
-                cfnresponse.send(event, context, cfnresponse.FAILED, responseData, physicalResourceId)
-                return
+  #             try:
+  #               response = asg_client.update_auto_scaling_group(
+  #                   AutoScalingGroupName=asg_name,
+  #                   NewInstancesProtectedFromScaleIn=True,
+  #               )
+  #             except Exception as e:
+  #               responseData['reason'] = "Cannot create Capacity Provider: " + str(e)
+  #               cfnresponse.send(event, context, cfnresponse.FAILED, responseData, physicalResourceId)
+  #               return
 
-              try:
-                response = ecs_client.create_capacity_provider(
-                    name=cap_provider_name,
-                    autoScalingGroupProvider={
-                        'autoScalingGroupArn': asg_arn,
-                        'managedScaling': {
-                            'status': 'ENABLED',
-                            'targetCapacity': target_capacity
-                        },
-                        'managedTerminationProtection': 'ENABLED'
-                    },
-                    tags=[
-                        {
-                            'key': 'Name',
-                            'value': cap_provider_name
-                        },
-                    ]
-                )
-              except Exception as e:
-                responseData['reason'] = "Cannot create Capacity Provider: " + str(e)
-                cfnresponse.send(event, context, cfnresponse.FAILED, responseData, physicalResourceId)
-                return
-            elif event['RequestType'] == 'Update' or event['RequestType'] == 'Delete':
-              responseData['reason'] = 'No changes required.'
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, physicalResourceId)
+  #             try:
+  #               response = ecs_client.create_capacity_provider(
+  #                   name=cap_provider_name,
+  #                   autoScalingGroupProvider={
+  #                       'autoScalingGroupArn': asg_arn,
+  #                       'managedScaling': {
+  #                           'status': 'ENABLED',
+  #                           'targetCapacity': target_capacity
+  #                       },
+  #                       'managedTerminationProtection': 'ENABLED'
+  #                   },
+  #                   tags=[
+  #                       {
+  #                           'key': 'Name',
+  #                           'value': cap_provider_name
+  #                       },
+  #                   ]
+  #               )
+
+  #               cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, physicalResourceId)
+  #             except Exception as e:
+  #               responseData['reason'] = "Cannot create Capacity Provider: " + str(e)
+  #               cfnresponse.send(event, context, cfnresponse.FAILED, responseData, physicalResourceId)
+  #               return
+  #           elif event['RequestType'] == 'Update' or event['RequestType'] == 'Delete':
+  #             responseData['reason'] = 'No changes required.'
+  #             cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, physicalResourceId)
 
   # This security group defines who/where is allowed to access the ECS hosts directly.
   # By default we're just allowing access from the load balancer.  If you want to SSH
