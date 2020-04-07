@@ -22,4 +22,4 @@ if ! aws ssm get-parameters --names "/gurum/platform/domain-name" 2>&1 | grep -q
 fi
 
 aws cloudformation package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix 'cfn' --output-template-file template-deploy.yaml
-aws cloudformation deploy --template-file template-deploy.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation deploy --template-file template-deploy.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
