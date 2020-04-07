@@ -111,7 +111,8 @@ Resources:
             Action:
               - ecs:CreateCapacityProvider
               - autoscaling:CreateOrUpdateTags
-              - autoscaling:DescribeAutoscalingGroups
+              - autoscaling:DescribeAutoScalingGroups
+              - autoscaling:UpdateAutoScalingGroup
             Resource: "*"
       InlineCode: |
         import boto3
@@ -132,6 +133,16 @@ Resources:
               asg = asg_client.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
               asg_arn = asg['AutoScalingGroups'][0]['AutoScalingGroupARN']
               cap_provider_name = '{}-capacity-provider'.format(environment_name)
+
+              try:
+                response = asg_client.update_auto_scaling_group(
+                    AutoScalingGroupName=asg_name,
+                    NewInstancesProtectedFromScaleIn=True,
+                )
+              except Exception as e:
+                responseData['reason'] = "Cannot create Capacity Provider: " + str(e)
+                cfnresponse.send(event, context, cfnresponse.FAILED, responseData, physicalResourceId)
+                return
 
               try:
                 response = ecs_client.create_capacity_provider(
