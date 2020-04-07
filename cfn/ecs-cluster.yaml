@@ -129,12 +129,12 @@ Resources:
               asg_name = event['ResourceProperties']['AutoScalingGroup']
               target_capacity = int(event['ResourceProperties']['TargetCapacity'])
 
-              asg = response = client.describe_auto_scaling_groups(AutoScalingGroupNames=[asg])
+              asg = asg_client.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
               asg_arn = asg['AutoScalingGroups'][0]['AutoScalingGroupARN']
               cap_provider_name = '{}-capacity-provider'.format(environment_name)
 
               try:
-                response = client.create_capacity_provider(
+                response = ecs_client.create_capacity_provider(
                     name=cap_provider_name,
                     autoScalingGroupProvider={
                         'autoScalingGroupArn': asg_arn,
